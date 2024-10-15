@@ -12,6 +12,7 @@ import torchvision.transforms.functional as TF
 from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
 sys.path.append('./cosplace')
 from cosplace.cosplace_model import cosplace_network, layers
+from mixvpr.main import VPRModel
 
 config = configparser.ConfigParser()
 config['global_params'] = {
@@ -26,6 +27,7 @@ config['global_params'] = {
 
 netvlad_pretrained_dir = './pretrained_models/mapillary_WPCA512.pth.tar'
 cosplace_pretrained_dir = './pretrained_models/cosplace_resnet152_512.pth'
+mixvpr_pretrained_dir = './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt'
 test_image_dir= 'test.png'
 
 def patch_netvlad_essential(image_tensor, device):
@@ -92,6 +94,33 @@ def cosplace_essential(image_tensor, device):
     # cosplace end
     torch.cuda.empty_cache()
 
+def mixvpr_essential(image_tensor, device):
+    
+    model = VPRModel(backbone_arch='resnet50',
+                     layers_to_crop=[4],
+                     agg_arch='MixVPR',
+                     agg_config={
+                         'in_channels' : 1024,
+                         'in_h' : 20,
+                         'in_w' : 20,
+                         'output_channels' : 1024,
+                         'mix_depth' : 4,
+                         'mlp_ratio': 1,
+                         'ouput_rows' : 4
+                     })
+    
+    state_dict = torch.load(mixvpr_pretrained_dir)
+    model.load_state_dict(state_dict)
+    model = model.to(device)
+    model.eval()
+
+    des = []
+    with torch.no_grad():
+        des = model(image_tensor.to(device))
+        des = des.cpu().numpy()
+
+    torch.cuda.empty_cache()
+
 def main():
 
     test_image = Image.open(test_image_dir)
@@ -103,8 +132,9 @@ def main():
     
     device = torch.device('cuda')
 
-    patch_netvlad_essential(image_tensor, device)
-    cosplace_essential(image_tensor, device)
+    # patch_netvlad_essential(image_tensor, device)
+    # cosplace_essential(image_tensor, device)
+    mixvpr_essential(image_tensor, device)
 
 if __name__ == '__main__':
     main()

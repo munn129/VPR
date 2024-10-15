@@ -1,3 +1,4 @@
 *.pth
 *.tar
+*.ckpt
 __pycache__
