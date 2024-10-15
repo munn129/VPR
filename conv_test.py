@@ -64,7 +64,7 @@ def patch_netvlad_essential(image_tensor, device):
                 reshape(this_local.size(2), this_local.size(0), pool_size).permute(1, 2, 0)
             local_feats.append(torch.transpose(this_local_feats[0, :, :], 0, 1))
 
-        # local_feats = local_feats.cpu().numpy()
+        local_feats = local_feats[0].cpu().numpy()
     # patch net vlad end
     torch.cuda.empty_cache()
 
