@@ -12,6 +12,7 @@ import torchvision.transforms.functional as TF
 from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
 sys.path.append('./cosplace')
 from cosplace.cosplace_model import cosplace_network, layers
+sys.path.append('./mixvpr')
 from mixvpr.main import VPRModel
 
 config = configparser.ConfigParser()
