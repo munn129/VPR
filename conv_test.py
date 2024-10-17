@@ -9,6 +9,8 @@ import numpy as np
 from PIL import Image
 import torchvision.transforms.functional as TF
 
+import torchvision.transforms as tvf
+
 from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
 sys.path.append('./cosplace')
 from cosplace.cosplace_model import cosplace_network, layers
@@ -104,29 +106,38 @@ def mixvpr_essential(image_tensor, device):
                          'in_channels' : 1024,
                          'in_h' : 20,
                          'in_w' : 20,
-                         'output_channels' : 1024,
+                         'out_channels' : 256,
                          'mix_depth' : 4,
                          'mlp_ratio': 1,
-                         'ouput_rows' : 4
+                         'out_rows' : 2 # the output dim will be (out_rows * out_channels)
                      })
     
     state_dict = torch.load(mixvpr_pretrained_dir)
     model.load_state_dict(state_dict)
-    model = model.to(device)
+    model.to('cuda')
     model.eval()
 
     des = []
     with torch.no_grad():
         des = model(image_tensor.to(device))
-        des = des.cpu().numpy()
+        des = des.detach().cpu().numpy()
 
     torch.cuda.empty_cache()
 
 def main():
 
     test_image = Image.open(test_image_dir)
-    image_tensor = TF.to_tensor(test_image)
-    image_tensor.unsqueeze_(0)
+    # image_tensor = TF.to_tensor(test_image)
+    # image_tensor.unsqueeze_(0)
+
+    transforms = tvf.Compose(
+        [tvf.Resize((320, 320), interpolation=tvf.InterpolationMode.BICUBIC),
+         tvf.ToTensor(),
+         tvf.Normalize([0.485, 0.456, 0.406],
+                       [0.229, 0.224, 0.225])]
+    )
+
+    image_tensor = transforms(test_image)
 
     if not torch.cuda.is_available():
         raise Exception('No GPU found')
