@@ -6,6 +6,7 @@ cosplace: Gabriele Berton et al. Rethinking Visual Geo-localization for Large-Sc
 mixvpr: Amar Ali-bey, et al, MixVPR: Feature Mixing for Visual Place Recognition, WACV, 2023.
 GeM: Filip Radenovic, et al, Finetuning CNN image retrieval with no human annotation, TPAMI, 2018,
 convAP: Amar Ali-bey, et al, GSV-Cities: Toward Appropriate Supervised Visual Place Recognition, Neurocomputing, 2022.
+transVPR: Ruotong Wang, et al, TransVPR: Transformer-based place recognition with multi-level attention aggregation, CVPR, 2022.
 '''
 
 
@@ -27,6 +28,9 @@ sys.path.append('./cosplace')
 from cosplace.cosplace_model import cosplace_network, layers
 sys.path.append('./mixvpr')
 from mixvpr.main import VPRModel
+sys.path.append('./transvpr')
+from transvpr.feature_extractor import Extractor_base
+from transvpr.blocks import POOL
 
 config = configparser.ConfigParser()
 config['global_params'] = {
@@ -42,6 +46,7 @@ config['global_params'] = {
 netvlad_pretrained_dir = './pretrained_models/mapillary_WPCA512.pth.tar'
 cosplace_pretrained_dir = './pretrained_models/cosplace_resnet152_512.pth'
 mixvpr_pretrained_dir = './pretrained_models/resnet50_MixVPR_4096_channels(1024)_rows(4).ckpt'
+transvpr_pretrained_dir = './pretrained_models/TransVPR_MSLS.pth'
 test_image_dir= 'test.png'
 
 def patch_netvlad_essential(image_tensor, device):
@@ -123,17 +128,6 @@ def mixvpr_essential(image_tensor, device):
                          'out_rows' : 4 # the output dim will be (out_rows * out_channels)
                      })
     
-    #---- Aggregator
-        # agg_arch='CosPlace',
-        # agg_config={'in_dim': 2048,
-        #             'out_dim': 2048},
-        # agg_arch='GeM',
-        # agg_config={'p': 3},
-        
-        # agg_arch='ConvAP',
-        # agg_config={'in_channels': 2048,
-        #             'out_channels': 2048},
-    
     state_dict = torch.load(mixvpr_pretrained_dir)
     model.load_state_dict(state_dict)
     model.to(device)
@@ -177,6 +171,24 @@ def covAP_essential(image_tensor, device):
 
     torch.cuda.empty_cache()
 
+def transVPR_essential(image_tensor, device):
+    
+    model = Extractor_base()
+    pool = POOL(model.embedding_dim)
+    model.add_module('pool', pool)
+
+    checkpoint = torch.load(transvpr_pretrained_dir)
+    model.load_state_dict(checkpoint)
+    
+    with torch.no_grad():
+        patch_feat = model(image_tensor)
+        global_feat, attention_mask = model.pool(patch_feat)
+
+        global_feat.detach().cpu().numpy()
+        attention_mask.detach().cpu().numpy()
+
+    torch.cuda.empty_cache()
+
 
 def main():
 
@@ -205,7 +217,8 @@ def main():
     # cosplace_essential(image_tensor, device)
     # mixvpr_essential(image_tensor, device)
     # gem_essential(image_tensor, device)
-    covAP_essential(image_tensor, device)
+    # covAP_essential(image_tensor, device)
+    transVPR_essential(image_tensor, device)
 
 if __name__ == '__main__':
     main()
