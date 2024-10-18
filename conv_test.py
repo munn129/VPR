@@ -30,7 +30,7 @@ config['global_params'] = {
 
 netvlad_pretrained_dir = './pretrained_models/mapillary_WPCA512.pth.tar'
 cosplace_pretrained_dir = './pretrained_models/cosplace_resnet152_512.pth'
-mixvpr_pretrained_dir = './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt'
+mixvpr_pretrained_dir = './pretrained_models/resnet50_MixVPR_4096_channels(1024)_rows(4).ckpt'
 test_image_dir= 'test.png'
 
 def patch_netvlad_essential(image_tensor, device):
@@ -106,15 +106,26 @@ def mixvpr_essential(image_tensor, device):
                          'in_channels' : 1024,
                          'in_h' : 20,
                          'in_w' : 20,
-                         'out_channels' : 256,
+                         'out_channels' : 1024,
                          'mix_depth' : 4,
                          'mlp_ratio': 1,
-                         'out_rows' : 2 # the output dim will be (out_rows * out_channels)
+                         'out_rows' : 4 # the output dim will be (out_rows * out_channels)
                      })
+    
+    #---- Aggregator
+        # agg_arch='CosPlace',
+        # agg_config={'in_dim': 2048,
+        #             'out_dim': 2048},
+        # agg_arch='GeM',
+        # agg_config={'p': 3},
+        
+        # agg_arch='ConvAP',
+        # agg_config={'in_channels': 2048,
+        #             'out_channels': 2048},
     
     state_dict = torch.load(mixvpr_pretrained_dir)
     model.load_state_dict(state_dict)
-    model.to('cuda')
+    model.to(device)
     model.eval()
 
     des = []
@@ -124,9 +135,43 @@ def mixvpr_essential(image_tensor, device):
 
     torch.cuda.empty_cache()
 
+def gem_essential(image_tensor, device):
+    model = VPRModel(
+        agg_arch='GeM',
+        agg_config={'p': 3})
+    
+    model.to(device)
+    model.eval()
+
+    des = []
+    with torch.no_grad():
+        des = model(image_tensor.to(device))
+        des = des.detach().cpu().numpy()
+
+    torch.cuda.empty_cache()
+
+def covAP_essential(image_tensor, device):
+    model = VPRModel(
+        agg_arch='ConvAP',
+        agg_config={'in_channels': 2048,
+                     'out_channels': 2048})
+    
+    model.to(device)
+    model.eval()
+
+    des = []
+    with torch.no_grad():
+        des = model(image_tensor.to(device))
+        des = des.detach().cpu().numpy()
+
+    torch.cuda.empty_cache()
+
+
 def main():
 
-    test_image = Image.open(test_image_dir)
+    # test_image = Image.open(test_image_dir)
+    test_image = Image.open(test_image_dir).convert('RGB')
+
     # image_tensor = TF.to_tensor(test_image)
     # image_tensor.unsqueeze_(0)
 
@@ -137,7 +182,8 @@ def main():
                        [0.229, 0.224, 0.225])]
     )
 
-    image_tensor = transforms(test_image)
+    # if don't .unsqueeze(0) -> ValueError: expected 4D input (got 3D input)
+    image_tensor = transforms(test_image).unsqueeze(0)
 
     if not torch.cuda.is_available():
         raise Exception('No GPU found')
@@ -146,7 +192,9 @@ def main():
 
     # patch_netvlad_essential(image_tensor, device)
     # cosplace_essential(image_tensor, device)
-    mixvpr_essential(image_tensor, device)
+    # mixvpr_essential(image_tensor, device)
+    # gem_essential(image_tensor, device)
+    covAP_essential(image_tensor, device)
 
 if __name__ == '__main__':
     main()
