@@ -19,6 +19,7 @@ import torch.nn as nn
 import numpy as np
 
 from math import sqrt
+from time import time
 
 from PIL import Image
 import torchvision.transforms.functional as TF
@@ -333,6 +334,7 @@ def transvlad(image_tensor, device, mask_len):
         vlad_matrix = local_vlad_pca.detach().cpu().numpy()
                 
     torch.cuda.empty_cache()
+
     return vlad_matrix
 
 
@@ -397,8 +399,6 @@ def netvlad_minimum_test():
 
 def transvlad_main():
 
-    from time import time
-
     test_image = Image.open(test_image_dir).convert('RGB')
 
     transforms = tvf.Compose(
@@ -415,20 +415,11 @@ def transvlad_main():
     
     device = torch.device('cuda')
 
-    s = time()
-
     z_normal_mask = z_normal_map(image_tensor, device)
-
-    s1 = time()
-    print(f'1 : {s1 - s}')
 
     vlad_matrix = transvlad(image_tensor, device, z_normal_mask)
 
-    s2 = time()
-    print(f'2 : {s2 - s1}')
-
     trans_vlad_vector = z_normal_mask @ vlad_matrix
-    print(f'3: {time() - s2}')
 
 if __name__ == '__main__':
     # main()
