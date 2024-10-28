@@ -18,6 +18,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+from math import sqrt
+
 from PIL import Image
 import torchvision.transforms.functional as TF
 
@@ -34,7 +36,7 @@ from transvpr.blocks import POOL
 
 config = configparser.ConfigParser()
 config['global_params'] = {
-    'pooling' : 'patchnetvlad',
+    'pooling' : 'netvlad',
     'resumepath' : './pretrained_models/mapillary_WPCA',
     'threads' : 0,
     'num_pcs' : 512,
@@ -225,7 +227,9 @@ def netvlad_essential(image_tensor, device):
 
     return vlad_global_pca
 
-def transvlad(image_tensor, device):
+
+# TRANS-VLAD
+def z_normal_map(image_tensor, device):
 
     trans_model = Extractor_base()
     pool = POOL(trans_model.embedding_dim)
@@ -259,6 +263,67 @@ def transvlad(image_tensor, device):
     z_normalized_mask = (z_normalized_mask - np.min(z_normalized_mask)) / (np.max(z_normalized_mask) - np.min(z_normalized_mask))
     z_normalized_mask = z_normalized_mask / sum(z_normalized_mask)
 
+    return z_normalized_mask
+
+def transvlad(image_tensor, device, mask_len):
+    
+    if mask_len is not int:
+        mask_len = len(mask_len)
+
+    # PIL Image.size -> W, H
+    # W = image.size[0]
+    # H = image.size[1]
+
+    # torch.size([1,3,H,W])    
+    H = image_tensor.size(dim=2)
+    W = image_tensor.size(dim=3)
+    patch_size = int(sqrt(H * W / mask_len))
+
+    transforms = tvf.Compose(
+        # 80 * 80: minmum size of netvlad
+        [tvf.Resize((80, 80), interpolation=tvf.InterpolationMode.BICUBIC),
+         tvf.Normalize([0.485, 0.456, 0.406],
+                       [0.229, 0.224, 0.225])]
+    )
+
+    encoder_dim, encoder = get_backend() # 512, nn.Sequential(*layers)
+
+    checkpoint = torch.load(netvlad_pretrained_dir)
+
+    config['global_params']['num_clusters'] = str(checkpoint['state_dict']['pool.centroids'].shape[0])
+
+    model = get_model(encoder, encoder_dim, config['global_params'], append_pca_layer=True)
+    model.load_state_dict(checkpoint['state_dict'])
+    model = model.to(device)
+
+    # feature extract
+    pool_size = int(config['global_params']['num_pcs'])
+
+    model.eval()
+    
+    vlad_matrix = np.empty((mask_len, encoder_dim))
+    B = 0
+    idx = 0
+
+    with torch.no_grad():
+        features = np.empty((1, pool_size), dtype=np.float32)
+
+        for w in range(0, W, patch_size):
+            for h in range(0, H, patch_size):
+                patch = image_tensor[B, :, w : w + patch_size, h : h + patch_size]
+                patch = transforms(patch).unsqueeze(0)
+                
+                patch_tensor = patch.to(device)
+                patch_encoding = model.encoder(patch_tensor)
+                local_vlad = model.pool(patch_encoding)
+                local_vlad_pca = get_pca_encoding(model, local_vlad)
+
+                vlad_matrix[idx, :] = local_vlad_pca.detach().cpu().numpy()
+                idx += 1
+                
+    torch.cuda.empty_cache()
+    return vlad_matrix
+
 
 def main():
 
@@ -266,18 +331,18 @@ def main():
     test_image = Image.open(test_image_dir).convert('RGB')
     # test_image = test_image.resize((100,100))
 
-    image_tensor = TF.to_tensor(test_image)
-    image_tensor.unsqueeze_(0)
+    # image_tensor = TF.to_tensor(test_image)
+    # image_tensor.unsqueeze_(0)
 
-    # transforms = tvf.Compose(
-    #     [tvf.Resize((32, 32), interpolation=tvf.InterpolationMode.BICUBIC),
-    #      tvf.ToTensor(),
-    #      tvf.Normalize([0.485, 0.456, 0.406],
-    #                    [0.229, 0.224, 0.225])]
-    # )
+    transforms = tvf.Compose(
+        [tvf.Resize((32, 32), interpolation=tvf.InterpolationMode.BICUBIC),
+         tvf.ToTensor(),
+         tvf.Normalize([0.485, 0.456, 0.406],
+                       [0.229, 0.224, 0.225])]
+    )
 
     # if don't .unsqueeze(0) -> ValueError: expected 4D input (got 3D input)
-    # image_tensor = transforms(test_image).unsqueeze(0)
+    image_tensor = transforms(test_image).unsqueeze(0)
 
     if not torch.cuda.is_available():
         raise Exception('No GPU found')
@@ -291,8 +356,8 @@ def main():
     # covAP_essential(image_tensor, device)
     # transVPR_essential(image_tensor, device)
     # transvlad(image_tensor, device)
-    # a = netvlad_essential(image_tensor, device)
-    # print(a.shape)
+
+    torch.cuda.empty_cache()
 
 def netvlad_minimum_test():
     test_image = Image.open(test_image_dir).convert('RGB')
@@ -319,6 +384,29 @@ def netvlad_minimum_test():
 
     print(patch_size)
 
+def transvlad_main():
+    test_image = Image.open(test_image_dir).convert('RGB')
+
+    transforms = tvf.Compose(
+        [tvf.Resize((320, 320), interpolation=tvf.InterpolationMode.BICUBIC),
+         tvf.ToTensor(),
+         tvf.Normalize([0.485, 0.456, 0.406],
+                       [0.229, 0.224, 0.225])]
+    )
+
+    image_tensor = transforms(test_image).unsqueeze(0)
+
+    if not torch.cuda.is_available():
+        raise Exception('No GPU found')
+    
+    device = torch.device('cuda')
+
+    z_normal_mask = z_normal_map(image_tensor, device)
+    vlad_matrix = transvlad(image_tensor, device, z_normal_mask)
+
+    trans_vlad_vector = z_normal_mask @ vlad_matrix
+
 if __name__ == '__main__':
-    main()
+    # main()
     # netvlad_minimum_test()
+    transvlad_main()
