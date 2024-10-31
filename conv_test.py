@@ -267,6 +267,8 @@ def z_normal_map(image_tensor, device):
     return z_normalized_mask
 
 def transvlad(image_tensor, device, mask_len):
+
+    s1 = time()
     
     if mask_len is not int:
         mask_len = len(mask_len)
@@ -287,6 +289,9 @@ def transvlad(image_tensor, device, mask_len):
                        [0.229, 0.224, 0.225])]
     )
 
+    s2 = time()
+    print(f'1 : {s2 - s1}')
+
     encoder_dim, encoder = get_backend() # 512, nn.Sequential(*layers)
 
     checkpoint = torch.load(netvlad_pretrained_dir)
@@ -297,14 +302,14 @@ def transvlad(image_tensor, device, mask_len):
     model.load_state_dict(checkpoint['state_dict'])
     model = model.to(device)
 
-    # feature extract
-    pool_size = int(config['global_params']['num_pcs'])
-
     model.eval()
     
     vlad_matrix = np.empty((mask_len, encoder_dim))
     B = 0
     idx = 0
+
+    s3 = time()
+    print(f'2 : {s3 - s2}')
 
     with torch.no_grad():
 
@@ -325,6 +330,9 @@ def transvlad(image_tensor, device, mask_len):
                 # vlad_matrix[idx, :] = local_vlad_pca.detach().cpu().numpy()
                 # idx += 1
 
+        s4 = time()
+        print(f'3 : {s4 - s3}')
+
         patch_batch = transforms(torch.from_numpy(patch_batch))
         patch_tensor = patch_batch.to(device)
         patch_encoding = model.encoder(patch_tensor)
@@ -334,6 +342,9 @@ def transvlad(image_tensor, device, mask_len):
         vlad_matrix = local_vlad_pca.detach().cpu().numpy()
                 
     torch.cuda.empty_cache()
+
+    s5 = time()
+    print(f'4 : {s5 - s4}')
 
     return vlad_matrix
 
