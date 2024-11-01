@@ -1,16 +1,12 @@
-def a():
-    print(112)
-
-class A:
-    def __init__(self):
-        self.a = a
-
-    def b(self):
-        a()
+import numpy as np
 
 def main():
-    a = A()
-    a.b()
+    a = True
+
+    b = 10 if a else 9
+
+    print(b)
+
 
 if __name__ == '__main__':
     main()

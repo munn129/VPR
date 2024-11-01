@@ -93,7 +93,7 @@ class Extractor:
                 
                 self.method = 'convap'
 
-        elif method == 'transvpr' or method == 'transvlad':
+        elif method == 'transvpr':
             sys.path.append('./transvpr')
             from transvpr.feature_extractor import Extractor_base
             from transvpr.blocks import POOL
@@ -103,6 +103,7 @@ class Extractor:
             model.add_module('pool', pool)
 
             checkpoint = torch.load(WEIGHTS[method])
+            model.load_state_dict(checkpoint)
 
         else:
             raise Exception('Input method is not supported.')
@@ -110,21 +111,6 @@ class Extractor:
         model = model.to(self.device)
         model.eval()
         self.model = model
-
-        if method == 'transvlad':
-            from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
-
-            encoder_dim, encoder = get_backend() # 512, nn.Sequential(*layers)
-            checkpoint = torch.load(WEIGHTS[method])
-            config['global_params']['num_clusters'] = str(checkpoint['state_dict']['pool.centroids'].shape[0])
-            model = get_model(encoder, encoder_dim, config['global_params'], append_pca_layer=True)
-            model.load_state_dict(checkpoint['state_dict'])
-
-            self.get_pca_encoding = get_pca_encoding
-
-            model = model.to(self.device)
-            model.eval()
-            self.vlad_model = model
 
         self.loader = loader
         self.matrix = np.empty((loader.__len__() * loader.batch_size, DIM))
@@ -153,14 +139,11 @@ class Extractor:
                     indices_np = indices.detach().numpy()
 
                     patch_feat = self.model(image_tensor.to(self.device))
-                    global_feat, attention_mask = self.model.pool(patch_feat)
+                    global_feat, _ = self.model.pool(patch_feat)
 
                     self.matrix[indices_np, :] = global_feat.detach().cpu().numpy()
 
             torch.cuda.empty_cache()
-
-        elif self.method == 'transvlad':
-            mask = np.empty((self.loader.__len__(), DIM))
 
         else: # cosplace, mixvpr, gem, convap
             with torch.no_grad():
@@ -177,12 +160,6 @@ class Extractor:
 
     def get_matrix(self):
         return self.matrix
-    
-def z_score_normalization(image_tensor, device):
-    pass
-
-def local_vald(image_tensor, device, dim = DIM):
-    pass
     
 def main():
     pass

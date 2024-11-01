@@ -17,10 +17,13 @@ from torch.utils.data import DataLoader
 
 from custom_dataset import CustomDataset
 from extractor import Extractor
+from transvlad import TransVLAD
+
+dataset_name_tail = '0519'
 
 def main():
     args = argparse.ArgumentParser()
-    args.add_argument('--method', type=str, default='netvlad',
+    args.add_argument('--method', type=str, default='transvlad',
                       help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
     args.add_argument('--dataset_dir', type=str, default='/media/moon/moon_ssd/moon_ubuntu/icrca/0519')
     args.add_argument('--dataset_name', type=str, default='oxford')
@@ -32,15 +35,25 @@ def main():
     method = options.method
     save_dir = Path(options.save_dir)
     dataset_name = options.dataset_name
-    dataset_name_tail = '0519'
     batch_size = options.batch_size
+
+    if options.method == 'transvlad':
+        # TODO
+        # batch_size > 1
+        batch_size = 1
     
     loader = DataLoader(CustomDataset(Path(options.dataset_dir)),
                         batch_size = batch_size,
                         num_workers = 0)
     
-    extractor = Extractor(method, loader)
+    extractor = TransVLAD(loader) if options.method == 'transvlad' else Extractor(method, loader)
+
     extractor.feature_extract()
+
+    #####
+    dataset_name_tail = options.dataset_dir.split('/')[-1]
+
+    #####
 
     save_file_dir = save_dir / (method + '_' + dataset_name + '_' + dataset_name_tail + '.npy')
     
