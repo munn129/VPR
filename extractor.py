@@ -44,7 +44,6 @@ class Extractor:
             encoder_dim, encoder = get_backend() # 512, nn.Sequential(*layers)
             checkpoint = torch.load(WEIGHTS[method])
             config['global_params']['num_clusters'] = str(checkpoint['state_dict']['pool.centroids'].shape[0])
-            pool_size = int(config['global_params']['num_pcs'])
             model = get_model(encoder, encoder_dim, config['global_params'], append_pca_layer=True)
             model.load_state_dict(checkpoint['state_dict'])
 
@@ -94,7 +93,7 @@ class Extractor:
                 
                 self.method = 'convap'
 
-        elif method == 'transvpr':
+        elif method == 'transvpr' or method == 'transvlad':
             sys.path.append('./transvpr')
             from transvpr.feature_extractor import Extractor_base
             from transvpr.blocks import POOL
@@ -111,6 +110,21 @@ class Extractor:
         model = model.to(self.device)
         model.eval()
         self.model = model
+
+        if method == 'transvlad':
+            from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
+
+            encoder_dim, encoder = get_backend() # 512, nn.Sequential(*layers)
+            checkpoint = torch.load(WEIGHTS[method])
+            config['global_params']['num_clusters'] = str(checkpoint['state_dict']['pool.centroids'].shape[0])
+            model = get_model(encoder, encoder_dim, config['global_params'], append_pca_layer=True)
+            model.load_state_dict(checkpoint['state_dict'])
+
+            self.get_pca_encoding = get_pca_encoding
+
+            model = model.to(self.device)
+            model.eval()
+            self.vlad_model = model
 
         self.loader = loader
         self.matrix = np.empty((loader.__len__() * loader.batch_size, DIM))
@@ -145,6 +159,9 @@ class Extractor:
 
             torch.cuda.empty_cache()
 
+        elif self.method == 'transvlad':
+            mask = np.empty((self.loader.__len__(), DIM))
+
         else: # cosplace, mixvpr, gem, convap
             with torch.no_grad():
 
@@ -160,6 +177,12 @@ class Extractor:
 
     def get_matrix(self):
         return self.matrix
+    
+def z_score_normalization(image_tensor, device):
+    pass
+
+def local_vald(image_tensor, device, dim = DIM):
+    pass
     
 def main():
     pass
