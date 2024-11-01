@@ -10,29 +10,13 @@ transVPR: Ruotong Wang, et al, TransVPR: Transformer-based place recognition wit
 '''
 
 import argparse
-import configparser
 import torch
 
 from pathlib import Path
 from torch.utils.data import DataLoader
 
-WEIGHTS = {
-    'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
-    'cosplace' : './pretrained_models/cosplace_resnet152_512.pth',
-    'mixpvr' : './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt',
-    'tranvpr' : './pretrained_models/TransVPR_MSLS.pth'
-}
-
-config = configparser.ConfigParser()
-config['global_params'] = {
-    'pooling' : 'netvlad',
-    'resumepath' : './pretrained_models/mapillary_WPCA',
-    'threads' : 0,
-    'num_pcs' : 512,
-    'ngpu' : 1,
-    'patch_sizes' : 5,
-    'strides' : 1
-}
+from custom_dataset import CustomDataset
+from extractor import Extractor
 
 def main():
     args = argparse.ArgumentParser()
@@ -43,16 +27,13 @@ def main():
     args.add_argument('--save_dir', type=str, default='/media/moon/T7 Shield/master_research',
                       help='save directory')
     
-    if not torch.cuda.is_available():
-        raise Exception("CUDA must need")
-    
-    device = torch.device('cuda')
-    
     options = args.parse_args()
 
-    method = options.method
-    dataset_dir = options.dataset
     save_dir = options.save_dir
+    
+    loader = DataLoader(CustomDataset(Path(options.dataset)),
+                        batch_size = 5,
+                        num_workers = 0)
 
 if __name__ == '__main__':
     main()
