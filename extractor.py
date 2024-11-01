@@ -3,8 +3,10 @@ import configparser
 import torchvision.transforms.functional as TF
 import torchvision.transforms as tvf
 import torch
+import numpy as np
 
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 WEIGHTS = {
     'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
@@ -12,6 +14,8 @@ WEIGHTS = {
     'mixpvr' : './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt',
     'tranvpr' : './pretrained_models/TransVPR_MSLS.pth'
 }
+
+DIM = 512
 
 config = configparser.ConfigParser()
 config['global_params'] = {
@@ -25,12 +29,14 @@ config['global_params'] = {
 }
 
 class Extractor:
-    def __init__(self, method: str, save_dir: str, loader: DataLoader):
+    def __init__(self, method: str, loader: DataLoader):
 
         if not torch.cuda.is_available():
             raise Exception("CUDA must need")
 
         self.device = torch.device('cuda')
+
+        self.method = method
         
         if method == 'netvlad':
             from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
@@ -41,6 +47,8 @@ class Extractor:
             pool_size = int(config['global_params']['num_pcs'])
             model = get_model(encoder, encoder_dim, config['global_params'], append_pca_layer=True)
             model.load_state_dict(checkpoint['state_dict'])
+
+            self.get_pca_encoding = get_pca_encoding
 
         elif method == 'cosplace':
             sys.path.append('./cosplace')
@@ -76,11 +84,15 @@ class Extractor:
                     agg_arch='GeM',
                     agg_config={'p': 3})
                 
+                self.method = 'gem'
+                
             elif method == 'convap':
                 model = VPRModel(
                     agg_arch='ConvAP',
                     agg_config={'in_channels': 2048,
                                 'out_channels': 2048})
+                
+                self.method = 'convap'
 
         elif method == 'transvpr':
             sys.path.append('./transvpr')
@@ -101,21 +113,56 @@ class Extractor:
         self.model = model
 
         self.loader = loader
+        self.matrix = np.empty((loader.__len__() * loader.batch_size, DIM))
 
-    def netvlad(self):
-        pass
+    def feature_extract(self):
 
-    def cosplace(self):
-        pass
+        if self.method == 'netvlad':
+            with torch.no_grad():
 
-    def mixvpr(self):
-        pass
+                for image_tensor, indices in tqdm(self.loader):
+                    
+                    indices_np = indices.detach().numpy()
 
-    def gem(self):
-        pass
+                    vlad = self.model.pool(self.model.encoder(image_tensor.to(self.device)))
+                    vlad_pca = self.get_pca_encoding(self.model, vlad)
 
-    def convap(self):
-        pass
+                    self.matrix[indices_np, :] = vlad_pca.detach().cpu().numpy()
 
-    def transvpr(self):
-        pass
+            torch.cuda.empty_cache()
+
+        elif self.method == 'transvpr':
+            with torch.no_grad():
+
+                for image_tensor, indices in tqdm(self.loader):
+
+                    indices_np = indices.detach().numpy()
+
+                    patch_feat = self.model(image_tensor.to(self.device))
+                    global_feat, attention_mask = self.model.pool(patch_feat)
+
+                    self.matrix[indices_np, :] = global_feat.detach().cpu().numpy()
+
+            torch.cuda.empty_cache()
+
+        else: # cosplace, mixvpr, gem, convap
+            with torch.no_grad():
+
+                for image_tensor, indices in tqdm(self.loader):
+
+                    indices_np = indices.detach().numpy()
+
+                    descriptor = self.model(image_tensor.to(self.device))
+
+                    self.matrix[indices_np, :] = descriptor.detach().cpu().numpy()
+
+            torch.cuda.empty_cache()
+
+    def get_matrix(self):
+        return self.matrix
+    
+def main():
+    pass
+
+if __name__ == '__main__':
+    main()

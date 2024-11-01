@@ -26,7 +26,7 @@ class CustomDataset(Dataset):
         image: Tensor
         image path: tuple(str1, str2, ...)
         '''
-        return (transform(img), str(img_path))
+        return (transform(img), index)
     
 def main():
     path = Path('/media/moon/moon_ssd/moon_ubuntu/icrca/0519')
@@ -35,8 +35,8 @@ def main():
                         batch_size=5,
                         num_workers=0)
     
-    for t_img, img_path in loader:
-        print(type(img_path))
+    for t_img, idx in loader:
+        print(idx)
 
 if __name__ == '__main__':
     main()
