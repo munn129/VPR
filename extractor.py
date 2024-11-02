@@ -102,6 +102,9 @@ class Extractor:
             from transvpr.feature_extractor import Extractor_base
             from transvpr.blocks import POOL
 
+            # TODO
+            DIM = 256
+
             model = Extractor_base()
             pool = POOL(model.embedding_dim)
             model.add_module('pool', pool)

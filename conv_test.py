@@ -377,8 +377,8 @@ def main():
     # cosplace_essential(image_tensor, device)
     # mixvpr_essential(image_tensor, device)
     # gem_essential(image_tensor, device)
-    covAP_essential(image_tensor, device)
-    # transVPR_essential(image_tensor, device)
+    # covAP_essential(image_tensor, device)
+    transVPR_essential(image_tensor, device)
     # transvlad(image_tensor, device)
 
     torch.cuda.empty_cache()

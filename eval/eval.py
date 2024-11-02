@@ -180,5 +180,33 @@ def main():
         eval.error_analysis()
 
 
+def main2():
+
+    method = 'transvpr'
+
+    result_dir = f'/home/moon/Documents/VPR/eval/vpr_results/{method}_result.txt'
+    save_dir = '/home/moon/Documents/VPR/eval/error_results'
+
+    index_gps = GPS(index_gps_dir)
+    query_gps = GPS(query_gps_dir)
+
+    result = Result(result_dir)
+    eval = Evaluation(result, query_gps, index_gps)
+    eval.error_calculator()
+    eval.save(f'{save_dir}/{method}.txt')
+    eval.error_analysis()
+
+
 if __name__ == '__main__':
-    main()
+    # main()
+    main2()
+
+
+# translation error
+# 'convap': 554
+# 'cosplace': 17
+# 'gem': 374
+# 'mixvpr': 11
+# 'netvlad': 136
+# 'transvlad': 516
+# 'transvpr': 122
