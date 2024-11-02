@@ -2,4 +2,5 @@
 *.tar
 *.ckpt
 *.npy
+*.txt
 __pycache__

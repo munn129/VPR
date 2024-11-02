@@ -11,11 +11,10 @@ from tqdm import tqdm
 WEIGHTS = {
     'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
     'cosplace' : './pretrained_models/cosplace_resnet152_512.pth',
-    'mixpvr' : './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt',
-    'tranvpr' : './pretrained_models/TransVPR_MSLS.pth'
+    'mixvpr' : './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt',
+    'transvpr' : './pretrained_models/TransVPR_MSLS.pth'
 }
 
-DIM = 512
 
 config = configparser.ConfigParser()
 config['global_params'] = {
@@ -30,6 +29,7 @@ config['global_params'] = {
 
 class Extractor:
     def __init__(self, method: str, loader: DataLoader):
+        DIM = 512
 
         if not torch.cuda.is_available():
             raise Exception("CUDA must need")
@@ -83,6 +83,8 @@ class Extractor:
                     agg_arch='GeM',
                     agg_config={'p': 3})
                 
+                # TODO
+                DIM = 2048
                 self.method = 'gem'
                 
             elif method == 'convap':
@@ -91,6 +93,8 @@ class Extractor:
                     agg_config={'in_channels': 2048,
                                 'out_channels': 2048})
                 
+                # TODO
+                DIM = 8192
                 self.method = 'convap'
 
         elif method == 'transvpr':

@@ -1,24 +1,4 @@
 python feature_extract.py \
-  --method transvlad \
-  --dataset_dir /media/moon/moon_ssd/moon_ubuntu/icrca/0519
-
-python feature_extract.py \
-  --method transvlad \
-  --dataset_dir /media/moon/moon_ssd/moon_ubuntu/icrca/0828
-
-python feature_extract.py \
-  --method netvlad \
-  --dataset_dir /media/moon/moon_ssd/moon_ubuntu/icrca/0828
-
-python feature_extract.py \
-  --method cosplace \
-  --dataset_dir /media/moon/moon_ssd/moon_ubuntu/icrca/0519
-
-python feature_extract.py \
-  --method cosplace \
-  --dataset_dir /media/moon/moon_ssd/moon_ubuntu/icrca/0828
-
-python feature_extract.py \
   --method mixvpr \
   --dataset_dir /media/moon/moon_ssd/moon_ubuntu/icrca/0519
 
