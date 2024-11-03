@@ -53,7 +53,7 @@ def main():
 
 def main2():
 
-    method = 'transvlad11'
+    method = 'transvlad14'
 
     # 0519: index
     # 0828: query

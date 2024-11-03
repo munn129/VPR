@@ -3,6 +3,7 @@ import configparser
 import torchvision.transforms.functional as TF
 import torchvision.transforms as tvf
 import torch
+import torch.nn.functional as F
 import numpy as np
 
 from torch.utils.data import DataLoader
@@ -183,7 +184,21 @@ class TransVLAD:
             attention_map = attention_mask.view(1,3,20,20)
             attention_map = attention_map.repeat_interleave(16, dim=2).repeat_interleave(16, dim=3)
 
-            return self.mixvpr_model(attention_map.to(self.device)).detach().cpu().numpy()
+            softmax_attention_map = F.softmax(attention_map, dim = 1)
+            
+            softmax_attention_map = (softmax_attention_map * attention_map).sum(dim = 1, keepdim = True)
+
+            softmax_attention_map_extended = softmax_attention_map.expand_as(image_tensor)
+            
+            prob_map =  (image_tensor.to(self.device) * softmax_attention_map_extended)
+
+            mean = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
+            std = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
+
+            normalized_prob_map = (prob_map - mean.to(self.device)) /std.to(self.device)
+
+            return self.mixvpr_model(normalized_prob_map).detach().cpu().numpy()
+            # return self.mixvpr_model(attention_map.to(self.device)).detach().cpu().numpy()
 
 
     def feature_extract(self):

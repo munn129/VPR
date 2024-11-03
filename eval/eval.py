@@ -182,7 +182,7 @@ def main():
 
 def main2():
 
-    method = 'transvlad11'
+    method = 'transvlad14'
 
     result_dir = f'/home/moon/Documents/VPR/eval/vpr_results/{method}_result.txt'
     save_dir = '/home/moon/Documents/VPR/eval/error_results'
@@ -223,3 +223,5 @@ if __name__ == '__main__':
 # transvlad8: 516 -> only patch
 # transvlad9: 512 -> 0 or 1 20%
 # 11: 467 -> attention map only
+# 12: 488 -> attention map * image -> mixvpr
+# 13: only mixvpr

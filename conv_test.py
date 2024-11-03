@@ -23,8 +23,8 @@ from time import time
 
 from PIL import Image
 import torchvision.transforms.functional as TF
-
 import torchvision.transforms as tvf
+import torch.nn.functional as F
 
 from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
 sys.path.append('./cosplace')
@@ -366,8 +366,6 @@ def attention_map(image_tensor, device):
     trans_model.to(device)
     trans_model.eval()
 
-    attention_mask = []
-
     with torch.no_grad():
         patch_feat = trans_model(image_tensor.to(device))
         global_feat, attention_mask = trans_model.pool(patch_feat)
@@ -375,7 +373,14 @@ def attention_map(image_tensor, device):
     attention_map = attention_mask.view(1,3,20,20)
     attention_map = attention_map.repeat_interleave(16, dim=2).repeat_interleave(16, dim=3)
 
-    return attention_map
+
+    softmax_attention_map = F.softmax(attention_map, dim = 1)
+            
+    softmax_attention_map = (softmax_attention_map * attention_map).sum(dim = 1, keepdim = True)
+    
+    softmax_attention_map_extended = softmax_attention_map.expand_as(image_tensor)
+
+    return (image_tensor * softmax_attention_map_extended).detach().cpu().numpy()
 
 
 def main():
