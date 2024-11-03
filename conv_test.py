@@ -378,8 +378,8 @@ def main():
     # mixvpr_essential(image_tensor, device)
     # gem_essential(image_tensor, device)
     # covAP_essential(image_tensor, device)
-    transVPR_essential(image_tensor, device)
-    # transvlad(image_tensor, device)
+    # transVPR_essential(image_tensor, device)
+    transvlad(image_tensor, device)
 
     torch.cuda.empty_cache()
 
@@ -433,6 +433,6 @@ def transvlad_main():
     trans_vlad_vector = z_normal_mask @ vlad_matrix
 
 if __name__ == '__main__':
-    main()
+    # main()
     # netvlad_minimum_test()
-    # transvlad_main()
+    transvlad_main()

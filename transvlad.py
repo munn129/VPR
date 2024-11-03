@@ -90,20 +90,30 @@ class TransVLAD:
         with torch.no_grad():
             patch_feat = self.trans_model(image_tensor.to(self.device))
             attention_mask = self.trans_model.pool(patch_feat)[1].detach().cpu().numpy()
+            # attention mask (1,3,400)
 
         torch.cuda.empty_cache()
+
+        # attention_mask.shape: 1,3,400
 
         for i in range(attention_mask.shape[2]):
             self.z_normalized_mask.append(sum(attention_mask[0].T[i]))
 
         self.z_normalized_mask = np.array(self.z_normalized_mask)
 
-        # z-score normalization
-        self.z_normalized_mask = (self.z_normalized_mask - np.mean(self.z_normalized_mask)) / np.std(self.z_normalized_mask)
+        # # z-score normalization
+        # self.z_normalized_mask = (self.z_normalized_mask - np.mean(self.z_normalized_mask)) / np.std(self.z_normalized_mask)
 
-        # 0 to 1 normalization
-        self.z_normalized_mask = (self.z_normalized_mask - np.min(self.z_normalized_mask)) / (np.max(self.z_normalized_mask) - np.min(self.z_normalized_mask))
-        self.z_normalized_mask = self.z_normalized_mask / sum(self.z_normalized_mask)
+        # # 0 to 1 normalization
+        # self.z_normalized_mask = (self.z_normalized_mask - np.min(self.z_normalized_mask)) / (np.max(self.z_normalized_mask) - np.min(self.z_normalized_mask))
+        # self.z_normalized_mask = self.z_normalized_mask / sum(self.z_normalized_mask)
+
+        # mid attention mask test
+        # self.z_normalized_mask = attention_mask[0, 1, :]
+
+
+    def something(self, image_tensor):
+        pass
 
 
     def local_vlad(self, image_tensor):
@@ -144,10 +154,13 @@ class TransVLAD:
 
             indices_np = indices.detach().numpy()
             
-            self.z_normal(image_tensor)
+            # self.z_normal(image_tensor)
+            self.z_normalized_mask = np.ones((400,1))
             self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.z_normalized_mask @ self.vlad_matrix
+
+            self.matrix[indices_np, :] = self.z_normalized_mask.T @ self.vlad_matrix
+
 
     def get_matrix(self):
         return self.matrix

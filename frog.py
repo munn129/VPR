@@ -1,11 +1,21 @@
 import numpy as np
 
 def main():
-    a = True
+    a = '/media/moon/T7 Shield/master_research/transvlad5_oxford_0828.npy'
+    aa = '/media/moon/T7 Shield/master_research/transvlad5_oxford_0519.npy'
 
-    b = 10 if a else 9
+    # (18966, 512)
+    b = np.load(a)
+    bb = np.load(aa)
 
-    print(b)
+
+    cnt = 0
+
+    for i in range(b.shape[0]):
+        if sum(b[i, :]) == 0.0:
+            cnt +=1
+
+    print(cnt)
 
 
 if __name__ == '__main__':

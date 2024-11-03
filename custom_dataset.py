@@ -13,8 +13,11 @@ transform = tvf.Compose(
 )
 
 class CustomDataset(Dataset):
-    def __init__(self, image_path: Path):
-        self.image_path_list = sorted(list(image_path.glob('**/*.png')))
+    def __init__(self, image_path: Path, sub_test = 0):
+        if sub_test == 0:
+            self.image_path_list = sorted(list(image_path.glob('**/*.png')))
+        else:
+            self.image_path_list = sorted(list(image_path.glob('**/*.png')))[5000: 5000 + sub_test]
 
     def __len__(self):
         return len(self.image_path_list)

@@ -182,7 +182,7 @@ def main():
 
 def main2():
 
-    method = 'transvpr'
+    method = 'transvlad8'
 
     result_dir = f'/home/moon/Documents/VPR/eval/vpr_results/{method}_result.txt'
     save_dir = '/home/moon/Documents/VPR/eval/error_results'
@@ -210,3 +210,13 @@ if __name__ == '__main__':
 # 'netvlad': 136
 # 'transvlad': 516
 # 'transvpr': 122
+
+# after 2 is subset
+# transvlad2: 290
+# netvlad2: 470
+# transvlad3: 281
+# mixvpr2: 429
+# transvlad4: 284
+# transvlad5: 516
+# transvlad6: 516
+# transvlad7: 549

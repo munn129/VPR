@@ -28,8 +28,8 @@ def main():
 
         save_list = []
         
-        index = np.load(npy_files[2 * i]).astype('float32')[:-100]
-        query = np.load(npy_files[2 * i + 1]).astype('float32')[:-100]
+        index = np.load(npy_files[2 * i]).astype('float32')
+        query = np.load(npy_files[2 * i + 1]).astype('float32')
 
         pool_size = query.shape[1]
 
@@ -53,7 +53,7 @@ def main():
 
 def main2():
 
-    method = 'transvpr'
+    method = 'transvlad8'
 
     # 0519: index
     # 0828: query
