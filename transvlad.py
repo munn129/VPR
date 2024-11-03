@@ -11,12 +11,13 @@ from tqdm import tqdm
 from math import sqrt
 
 from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
+sys.path.append('./cosplace')
+from cosplace.cosplace_model import cosplace_network, layers
+sys.path.append('./mixvpr')
+from mixvpr.main import VPRModel
 sys.path.append('./transvpr')
 from transvpr.feature_extractor import Extractor_base
 from transvpr.blocks import POOL
-
-sys.path.append('./mixvpr')
-from mixvpr.main import VPRModel
 
 WEIGHTS = {
     'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
@@ -96,6 +97,13 @@ class TransVLAD:
         mixvpr_model.eval()
         self.mixvpr_model = mixvpr_model
 
+        # cosplace
+        cos_model = cosplace_network.GeoLocalizationNet('ResNet152', 512)
+        cos_model_state_dict = torch.load(WEIGHTS['cosplace'])
+        cos_model.load_state_dict(cos_model_state_dict)
+        cos_model = cos_model.to(self.device)
+        cos_model.eval()
+        self.cos_model = cos_model 
 
         # var
         self.z_normalized_mask = []
@@ -197,8 +205,16 @@ class TransVLAD:
 
             normalized_prob_map = (prob_map - mean.to(self.device)) /std.to(self.device)
 
-            return self.mixvpr_model(normalized_prob_map).detach().cpu().numpy()
+            normalized_prob_map = self.mixvpr_model(normalized_prob_map).detach().cpu().numpy()
+
+        torch.cuda.empty_cache()
+
+        return normalized_prob_map
             # return self.mixvpr_model(attention_map.to(self.device)).detach().cpu().numpy()
+
+
+    def something2(self , image_tensor):
+        pass
 
 
     def feature_extract(self):

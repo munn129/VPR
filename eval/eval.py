@@ -225,3 +225,4 @@ if __name__ == '__main__':
 # 11: 467 -> attention map only
 # 12: 488 -> attention map * image -> mixvpr
 # 13: only mixvpr
+# 14: 340 -> 12 with normalize
