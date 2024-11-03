@@ -92,6 +92,7 @@ def patch_netvlad_essential(image_tensor, device):
     # patch net vlad end
     torch.cuda.empty_cache()
 
+
 def cosplace_essential(image_tensor, device):
      # cosplace start
     model = cosplace_network.GeoLocalizationNet('ResNet152', 512)
@@ -115,6 +116,7 @@ def cosplace_essential(image_tensor, device):
 
     # cosplace end
     torch.cuda.empty_cache()
+
 
 def mixvpr_essential(image_tensor, device):
     
@@ -142,6 +144,7 @@ def mixvpr_essential(image_tensor, device):
         des = des.detach().cpu().numpy()
 
     torch.cuda.empty_cache()
+
 
 def gem_essential(image_tensor, device):
     model = VPRModel(
@@ -174,6 +177,7 @@ def covAP_essential(image_tensor, device):
 
     torch.cuda.empty_cache()
 
+
 def transVPR_essential(image_tensor, device):
     
     model = Extractor_base()
@@ -194,6 +198,7 @@ def transVPR_essential(image_tensor, device):
         # patch size : 16 x 16
 
     torch.cuda.empty_cache()
+
 
 def netvlad_essential(image_tensor, device):
         # patch netvlad start
@@ -258,13 +263,14 @@ def z_normal_map(image_tensor, device):
 
     z_normalized_mask = np.array(z_normalized_mask)
     # z-score normalization
-    z_normalized_mask = (z_normalized_mask - np.mean(z_normalized_mask)) / np.std(z_normalized_mask)
+    # z_normalized_mask = (z_normalized_mask - np.mean(z_normalized_mask)) / np.std(z_normalized_mask)
 
     # 0 to 1 normalization
     z_normalized_mask = (z_normalized_mask - np.min(z_normalized_mask)) / (np.max(z_normalized_mask) - np.min(z_normalized_mask))
     z_normalized_mask = z_normalized_mask / sum(z_normalized_mask)
 
     return z_normalized_mask
+
 
 def transvlad(image_tensor, device, mask_len):
 
@@ -349,6 +355,29 @@ def transvlad(image_tensor, device, mask_len):
     return vlad_matrix
 
 
+def attention_map(image_tensor, device):
+
+    trans_model = Extractor_base()
+    pool = POOL(trans_model.embedding_dim)
+    trans_model.add_module('pool', pool)
+
+    trans_checkpoint = torch.load(transvpr_pretrained_dir)
+    trans_model.load_state_dict(trans_checkpoint)
+    trans_model.to(device)
+    trans_model.eval()
+
+    attention_mask = []
+
+    with torch.no_grad():
+        patch_feat = trans_model(image_tensor.to(device))
+        global_feat, attention_mask = trans_model.pool(patch_feat)
+
+    attention_map = attention_mask.view(1,3,20,20)
+    attention_map = attention_map.repeat_interleave(16, dim=2).repeat_interleave(16, dim=3)
+
+    return attention_map
+
+
 def main():
 
     # test_image = Image.open(test_image_dir)
@@ -359,7 +388,7 @@ def main():
     # image_tensor.unsqueeze_(0)
 
     transforms = tvf.Compose(
-        [tvf.Resize((32, 32), interpolation=tvf.InterpolationMode.BICUBIC),
+        [tvf.Resize((320, 320), interpolation=tvf.InterpolationMode.BICUBIC),
          tvf.ToTensor(),
          tvf.Normalize([0.485, 0.456, 0.406],
                        [0.229, 0.224, 0.225])]
@@ -375,13 +404,14 @@ def main():
 
     # patch_netvlad_essential(image_tensor, device)
     # cosplace_essential(image_tensor, device)
-    # mixvpr_essential(image_tensor, device)
+    mixvpr_essential(image_tensor, device)
     # gem_essential(image_tensor, device)
     # covAP_essential(image_tensor, device)
     # transVPR_essential(image_tensor, device)
-    transvlad(image_tensor, device)
+    # transvlad(image_tensor, device)
 
     torch.cuda.empty_cache()
+
 
 def netvlad_minimum_test():
     test_image = Image.open(test_image_dir).convert('RGB')
@@ -408,6 +438,7 @@ def netvlad_minimum_test():
 
     print(patch_size)
 
+
 def transvlad_main():
 
     test_image = Image.open(test_image_dir).convert('RGB')
@@ -429,10 +460,33 @@ def transvlad_main():
     z_normal_mask = z_normal_map(image_tensor, device)
 
     vlad_matrix = transvlad(image_tensor, device, z_normal_mask)
+    # vlad_matrix = transmixvpr(image_tensor, device, z_normal_mask)
 
     trans_vlad_vector = z_normal_mask @ vlad_matrix
+
+def trans_mix_poc():
+    test_image = Image.open(test_image_dir).convert('RGB')
+
+    transforms = tvf.Compose(
+        [tvf.Resize((320, 320), interpolation=tvf.InterpolationMode.BICUBIC),
+         tvf.ToTensor(),
+         tvf.Normalize([0.485, 0.456, 0.406],
+                       [0.229, 0.224, 0.225])]
+    )
+
+    image_tensor = transforms(test_image).unsqueeze(0)
+
+    if not torch.cuda.is_available():
+        raise Exception('No GPU found')
+    
+    device = torch.device('cuda')
+
+    a = attention_map(image_tensor, device)
+    mixvpr_essential(a, device)
+
 
 if __name__ == '__main__':
     # main()
     # netvlad_minimum_test()
-    transvlad_main()
+    # transvlad_main()
+    trans_mix_poc()

@@ -14,6 +14,9 @@ sys.path.append('./transvpr')
 from transvpr.feature_extractor import Extractor_base
 from transvpr.blocks import POOL
 
+sys.path.append('./mixvpr')
+from mixvpr.main import VPRModel
+
 WEIGHTS = {
     'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
     'cosplace' : './pretrained_models/cosplace_resnet152_512.pth',
@@ -71,6 +74,28 @@ class TransVLAD:
 
         self.vlad_model = vlad_model
 
+        # mixvpr
+        mixvpr_model = VPRModel(backbone_arch='resnet50',
+            layers_to_crop=[4],
+            agg_arch='MixVPR',
+            agg_config={
+                'in_channels' : 1024,
+                'in_h' : 20,
+                'in_w' : 20,
+                'out_channels' : 256,
+                'mix_depth' : 4,
+                'mlp_ratio': 1,
+                'out_rows' : 2 # the output dim will be (out_rows * out_channels)
+            })
+        
+        state_dict = torch.load(WEIGHTS['mixpvr'])
+        mixvpr_model.load_state_dict(state_dict)
+
+        mixvpr_model = mixvpr_model.to(self.device)
+        mixvpr_model.eval()
+        self.mixvpr_model = mixvpr_model
+
+
         # var
         self.z_normalized_mask = []
         self.vlad_matrix = []
@@ -105,15 +130,15 @@ class TransVLAD:
         # self.z_normalized_mask = (self.z_normalized_mask - np.mean(self.z_normalized_mask)) / np.std(self.z_normalized_mask)
 
         # # 0 to 1 normalization
-        # self.z_normalized_mask = (self.z_normalized_mask - np.min(self.z_normalized_mask)) / (np.max(self.z_normalized_mask) - np.min(self.z_normalized_mask))
-        # self.z_normalized_mask = self.z_normalized_mask / sum(self.z_normalized_mask)
+        self.z_normalized_mask = (self.z_normalized_mask - np.min(self.z_normalized_mask)) / (np.max(self.z_normalized_mask) - np.min(self.z_normalized_mask))
+        self.z_normalized_mask = self.z_normalized_mask / sum(self.z_normalized_mask)
+
+        # mask filtering
+        threshold = np.percentile(self.z_normalized_mask, 80)
+        self.z_normalized_mask = np.where(self.z_normalized_mask >= threshold, 1, 0)
 
         # mid attention mask test
         # self.z_normalized_mask = attention_mask[0, 1, :]
-
-
-    def something(self, image_tensor):
-        pass
 
 
     def local_vlad(self, image_tensor):
@@ -148,6 +173,19 @@ class TransVLAD:
                     
         torch.cuda.empty_cache()
 
+    
+    def something(self, image_tensor):
+
+        with torch.no_grad():
+            patch_feat = self.trans_model(image_tensor.to(self.device))
+            global_feat, attention_mask = self.trans_model.pool(patch_feat)
+
+            attention_map = attention_mask.view(1,3,20,20)
+            attention_map = attention_map.repeat_interleave(16, dim=2).repeat_interleave(16, dim=3)
+
+            return self.mixvpr_model(attention_map.to(self.device)).detach().cpu().numpy()
+
+
     def feature_extract(self):
         
         for image_tensor, indices in tqdm(self.loader):
@@ -155,11 +193,10 @@ class TransVLAD:
             indices_np = indices.detach().numpy()
             
             # self.z_normal(image_tensor)
-            self.z_normalized_mask = np.ones((400,1))
-            self.local_vlad(image_tensor)
+            # self.z_normalized_mask = np.ones((400,1))
+            # self.local_vlad(image_tensor)
 
-
-            self.matrix[indices_np, :] = self.z_normalized_mask.T @ self.vlad_matrix
+            self.matrix[indices_np, :] = self.something(image_tensor)
 
 
     def get_matrix(self):

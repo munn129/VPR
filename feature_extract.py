@@ -61,7 +61,7 @@ def main():
 
 def main2():
 
-    VERSION = '8'
+    VERSION = '11'
 
     args = argparse.ArgumentParser()
     args.add_argument('--method', type=str, default='transvlad',
