@@ -11,7 +11,7 @@ method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvpr']
 
 
 def imagename_generator(image_dir_prefix, image_dir_postfix):
-    image_dir = image_dir_prefix + image_dir_postfix + '/front'
+    image_dir = image_dir_prefix + image_dir_postfix + '/concat'
     imagename_list = sorted(list(Path(image_dir).glob('*.png')))
     return [str(i)[len(image_dir_prefix):] for i in imagename_list]
 
@@ -70,7 +70,7 @@ def main2():
     args = argparse.ArgumentParser()
     args.add_argument('--method', type=str, default='transvlad',
                       help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
-    args.add_argument('--version', type=str, default='')
+    args.add_argument('--version', type=str, default='1')
 
     options = args.parse_args()
 
@@ -82,7 +82,7 @@ def main2():
     query_imagename_list = imagename_generator(image_dir_prefix, '0828')
 
     # convap, cosplace, gem, mixvpr, netvlad, transvlad
-    npy_files = sorted(list(Path(feature_dir_prefix).glob(f'{method}*.npy'))[:-100])
+    npy_files = sorted(list(Path(feature_dir_prefix).glob(f'{method}*.npy')))
 
     save_list = []
     
@@ -100,7 +100,7 @@ def main2():
         # val: array([15916])
         save_list.append(f'{query_imagename_list[idx]} {index_imagename_list[val[0]]}')
 
-    save_file_name = f'./eval/vpr_results/{method}_result.txt'
+    save_file_name = f'./eval/multiview_results/{method}_result.txt'
 
     with open(save_file_name, 'w') as file:
         file.write('# query index\n')

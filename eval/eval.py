@@ -159,8 +159,8 @@ class Evaluation:
 
 method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvpr']
 
-query_gps_dir = '/home/moon/Documents/VPR/eval/0828_front_gt.txt'
-index_gps_dir = '/home/moon/Documents/VPR/eval/0519_front_gt.txt'
+query_gps_dir = '/home/moon/Documents/VPR/eval/0828_concat_gt.txt'
+index_gps_dir = '/home/moon/Documents/VPR/eval/0519_concat_gt.txt'
 
 
 def main():
@@ -197,13 +197,13 @@ def main2():
     args = argparse.ArgumentParser()
     args.add_argument('--method', type=str, default='transvlad',
                       help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
-    args.add_argument('--version', type=str, default='')
+    args.add_argument('--version', type=str, default='1')
 
     options = args.parse_args()
 
     method = options.method + options.version
 
-    result_dir = f'/home/moon/Documents/VPR/eval/vpr_results/{method}_result.txt'
+    result_dir = f'/home/moon/Documents/VPR/eval/multiview_results/{method}_result.txt'
     save_dir = '/home/moon/Documents/VPR/eval/error_results'
 
     index_gps = GPS(index_gps_dir)
@@ -261,3 +261,5 @@ if __name__ == '__main__':
 # mixvpr: 21
 # netvlad: 145
 # transvpr: 127
+# transvlad1: probmap + cosplace: something2: 55
+# sum: something3: 52

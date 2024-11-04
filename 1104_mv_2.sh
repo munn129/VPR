@@ -1,4 +1,4 @@
-VERSION=1
+VERSION=2
 
 python feature_extract.py \
   --dataset_dir /media/moon/moon_ssd/moon_ubuntu/post_oxford/0519/concat \

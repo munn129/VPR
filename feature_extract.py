@@ -95,7 +95,7 @@ def main2():
     extractor.feature_extract()
 
     #####
-    dataset_name_tail = options.dataset_dir.split('/')[-1]
+    dataset_name_tail = options.dataset_dir.split('/')[-2]
 
     #####
 

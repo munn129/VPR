@@ -249,6 +249,29 @@ class TransVLAD:
         torch.cuda.empty_cache()
 
         return (attention_mask @ concatenated_descriptor).detach().cpu().numpy()
+    
+    def something3(self, image_tensor):
+        with torch.no_grad():
+            
+            W = int(image_tensor.shape[2]/2)
+            H = int(image_tensor.shape[3]/2)
+
+            top_left = image_tensor[:, :, :W, :H]
+            top_right = image_tensor[:, :, :W, H:]
+            bottom_left = image_tensor[:, :, W:, :H]
+            bottom_right = image_tensor[:, :, W:, H:]
+
+            top_left_des = self.cos_model(top_left.to(self.device))
+            top_right_des = self.cos_model(top_right.to(self.device))
+            bottom_left_des = self.cos_model(bottom_left.to(self.device))
+            bottom_right_des = self.cos_model(bottom_right.to(self.device))
+
+            # 4 * 512
+            concatenated_descriptor = torch.cat((top_left_des, top_right_des, bottom_left_des, bottom_right_des), dim = 0)
+
+        torch.cuda.empty_cache()
+
+        return concatenated_descriptor.sum(dim = 0, keepdim = True).detach().cpu().numpy()
 
 
     def feature_extract(self):
@@ -261,7 +284,7 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something2(image_tensor)
+            self.matrix[indices_np, :] = self.something3(image_tensor)
 
 
     def get_matrix(self):
@@ -279,7 +302,7 @@ def main():
 
     for image_tensor, id in tqdm(loader):
 
-        extractor.something2(image_tensor)
+        extractor.something3(image_tensor)
 
 if __name__ == '__main__':
     main()
