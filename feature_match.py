@@ -1,35 +1,46 @@
+import argparse
 import numpy as np
 import faiss
 
 from pathlib import Path
 from tqdm import tqdm
 
-feature_dir_prefix = '/media/moon/T7 Shield/master_research'
-image_dir_prefix = '/media/moon/moon_ssd/moon_ubuntu/icrca/'
-method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvlad']
+feature_dir_prefix = '/media/moon/T7 Shield/multiview_results'
+image_dir_prefix = '/media/moon/moon_ssd/moon_ubuntu/post_oxford/'
+method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvpr']
 
 
 def imagename_generator(image_dir_prefix, image_dir_postfix):
-    image_dir = image_dir_prefix + image_dir_postfix
-    imagename_list = sorted(list(Path(image_dir).glob('**/*.png')))
+    image_dir = image_dir_prefix + image_dir_postfix + '/front'
+    imagename_list = sorted(list(Path(image_dir).glob('*.png')))
     return [str(i)[len(image_dir_prefix):] for i in imagename_list]
 
 
 def main():
+
+    args = argparse.ArgumentParser()
+    args.add_argument('--method', type=str, default='transvlad',
+                      help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
+    args.add_argument('--version', type=str, default='')
+
+    options = args.parse_args()
+    version = options.version
+
     # 0519: index
     # 0828: query
     index_imagename_list = imagename_generator(image_dir_prefix, '0519')
     query_imagename_list = imagename_generator(image_dir_prefix, '0828')
 
     # convap, cosplace, gem, mixvpr, netvlad, transvlad
-    npy_files = sorted(list(Path(feature_dir_prefix).glob('*.npy')))
+    npy_files = sorted(list(Path(feature_dir_prefix).glob(f'*{version}.npy')))
 
     for i in tqdm(range(int(len(npy_files)/2))):
 
         save_list = []
         
-        index = np.load(npy_files[2 * i]).astype('float32')
-        query = np.load(npy_files[2 * i + 1]).astype('float32')
+        # 0519, 0828, ... 
+        index = np.load(npy_files[2 * i]).astype('float32')[:-100]
+        query = np.load(npy_files[2 * i + 1]).astype('float32')[:-100]
 
         pool_size = query.shape[1]
 
@@ -42,7 +53,7 @@ def main():
             # val: array([15916])
             save_list.append(f'{query_imagename_list[idx]} {index_imagename_list[val[0]]}')
 
-        save_file_name = f'./eval/vpr_results/{method_list[i]}_result.txt'
+        save_file_name = f'./eval/multiview_results/{method_list[i]}{version}_result.txt'
 
         with open(save_file_name, 'w') as file:
             file.write('# query index\n')
@@ -53,7 +64,17 @@ def main():
 
 def main2():
 
-    method = 'transvlad14'
+    # for test just one method
+
+
+    args = argparse.ArgumentParser()
+    args.add_argument('--method', type=str, default='transvlad',
+                      help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
+    args.add_argument('--version', type=str, default='')
+
+    options = args.parse_args()
+
+    method = options.method + options.version
 
     # 0519: index
     # 0828: query
@@ -61,7 +82,7 @@ def main2():
     query_imagename_list = imagename_generator(image_dir_prefix, '0828')
 
     # convap, cosplace, gem, mixvpr, netvlad, transvlad
-    npy_files = sorted(list(Path(feature_dir_prefix).glob(f'{method}*.npy')))
+    npy_files = sorted(list(Path(feature_dir_prefix).glob(f'{method}*.npy'))[:-100])
 
     save_list = []
     
@@ -89,4 +110,5 @@ def main2():
             file.write(line + '\n')
 
 if __name__ == '__main__':
+    # main()
     main2()

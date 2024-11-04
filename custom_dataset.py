@@ -15,7 +15,7 @@ transform = tvf.Compose(
 class CustomDataset(Dataset):
     def __init__(self, image_path: Path, sub_test = 0):
         if sub_test == 0:
-            self.image_path_list = sorted(list(image_path.glob('**/*.png')))
+            self.image_path_list = sorted(list(image_path.glob('*.png')))
         else:
             self.image_path_list = sorted(list(image_path.glob('**/*.png')))[5000: 5000 + sub_test]
 
@@ -32,7 +32,7 @@ class CustomDataset(Dataset):
         return (transform(img), index)
     
 def main():
-    path = Path('/media/moon/moon_ssd/moon_ubuntu/icrca/0519')
+    path = Path('/media/moon/moon_ssd/moon_ubuntu/post_oxford/0519/concat')
     dataset = CustomDataset(path)
     loader = DataLoader(dataset,
                         batch_size=5,

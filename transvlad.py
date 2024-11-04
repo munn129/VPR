@@ -9,6 +9,8 @@ import numpy as np
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from math import sqrt
+from pathlib import Path
+from custom_dataset import CustomDataset
 
 from patchnetvlad.models.models_generic import get_backend, get_model, get_pca_encoding
 sys.path.append('./cosplace')
@@ -214,7 +216,39 @@ class TransVLAD:
 
 
     def something2(self , image_tensor):
-        pass
+        with torch.no_grad():
+            patch_feat = self.trans_model(image_tensor.to(self.device))
+            global_feat, attention_mask = self.trans_model.pool(patch_feat)
+
+            # attention_mask.shape: (1,3, 400)
+            attention_mask = attention_mask.view(1,3,20,20)
+
+            attention_mask = attention_mask.sum(dim = 1, keepdim = True)
+
+            attention_mask = attention_mask.view(1,1,2,10,2,10).sum(dim=(3,5))
+
+            attention_mask = attention_mask.view(1,1,4)
+
+            attention_mask /= 3
+
+            W = int(image_tensor.shape[2]/2)
+            H = int(image_tensor.shape[3]/2)
+
+            top_left = image_tensor[:, :, :W, :H]
+            top_right = image_tensor[:, :, :W, H:]
+            bottom_left = image_tensor[:, :, W:, :H]
+            bottom_right = image_tensor[:, :, W:, H:]
+
+            top_left_des = self.cos_model(top_left.to(self.device))
+            top_right_des = self.cos_model(top_right.to(self.device))
+            bottom_left_des = self.cos_model(bottom_left.to(self.device))
+            bottom_right_des = self.cos_model(bottom_right.to(self.device))
+
+            concatenated_descriptor = torch.cat((top_left_des, top_right_des, bottom_left_des, bottom_right_des), dim = 0)
+
+        torch.cuda.empty_cache()
+
+        return (attention_mask @ concatenated_descriptor).detach().cpu().numpy()
 
 
     def feature_extract(self):
@@ -227,8 +261,25 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something(image_tensor)
+            self.matrix[indices_np, :] = self.something2(image_tensor)
 
 
     def get_matrix(self):
         return self.matrix
+    
+def main():
+
+    dir = '/media/moon/moon_ssd/moon_ubuntu/post_oxford/0519/front'
+
+    loader = DataLoader(CustomDataset(Path(dir), 0),
+                        batch_size = 1,
+                        num_workers = 0)
+    
+    extractor = TransVLAD(loader)
+
+    for image_tensor, id in tqdm(loader):
+
+        extractor.something2(image_tensor)
+
+if __name__ == '__main__':
+    main()

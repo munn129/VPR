@@ -19,16 +19,16 @@ from custom_dataset import CustomDataset
 from extractor import Extractor
 from transvlad import TransVLAD
 
-dataset_name_tail = '0519'
 
 def main():
     args = argparse.ArgumentParser()
     args.add_argument('--method', type=str, default='transvlad',
                       help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
-    args.add_argument('--dataset_dir', type=str, default='/media/moon/moon_ssd/moon_ubuntu/icrca/0519')
+    args.add_argument('--dataset_dir', type=str, default='/media/moon/moon_ssd/moon_ubuntu/post_oxford/0519/front')
     args.add_argument('--dataset_name', type=str, default='oxford')
-    args.add_argument('--save_dir', type=str, default='/media/moon/T7 Shield/master_research')
+    args.add_argument('--save_dir', type=str, default='/media/moon/T7 Shield/multiview_results')
     args.add_argument('--batch_size', type=int, default=16)
+    args.add_argument('--version', type=str, default='')
     
     options = args.parse_args()
 
@@ -36,6 +36,7 @@ def main():
     save_dir = Path(options.save_dir)
     dataset_name = options.dataset_name
     batch_size = options.batch_size
+    version = options.version
 
     if options.method == 'transvlad':
         # TODO
@@ -51,25 +52,26 @@ def main():
     extractor.feature_extract()
 
     #####
-    dataset_name_tail = options.dataset_dir.split('/')[-1]
+    dataset_name_tail = options.dataset_dir.split('/')[-2]
 
     #####
 
-    save_file_dir = save_dir / (method + '_' + dataset_name + '_' + dataset_name_tail + '.npy')
+    save_file_dir = save_dir / (method + '_' + dataset_name + '_' + dataset_name_tail + version + '.npy')
     
     np.save(save_file_dir, extractor.get_matrix())
 
 def main2():
 
-    VERSION = '14'
+    # for test just one method
 
     args = argparse.ArgumentParser()
     args.add_argument('--method', type=str, default='transvlad',
                       help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
-    args.add_argument('--dataset_dir', type=str, default='/media/moon/moon_ssd/moon_ubuntu/icrca/0519')
+    args.add_argument('--dataset_dir', type=str, default='/media/moon/moon_ssd/moon_ubuntu/post_oxford/0519/concat')
     args.add_argument('--dataset_name', type=str, default='oxford')
-    args.add_argument('--save_dir', type=str, default='/media/moon/T7 Shield/master_research')
+    args.add_argument('--save_dir', type=str, default='/media/moon/T7 Shield/multiview_results')
     args.add_argument('--batch_size', type=int, default=16)
+    args.add_argument('--version', type=str, default='')
     
     options = args.parse_args()
 
@@ -77,6 +79,7 @@ def main2():
     save_dir = Path(options.save_dir)
     dataset_name = options.dataset_name
     batch_size = options.batch_size
+    VERSION = options.version
 
     if options.method == 'transvlad':
         # TODO

@@ -25,7 +25,7 @@ class FeatureMixerLayer(nn.Module):
         return x + self.mix(x)
 
 
-class MixVPR(nn.Module):
+class MixMixVPR(nn.Module):
     def __init__(self,
                  in_channels=1024,
                  in_h=20,
@@ -55,6 +55,8 @@ class MixVPR(nn.Module):
         self.channel_proj = nn.Linear(in_channels, out_channels)
         self.row_proj = nn.Linear(hw, out_rows)
 
+        self.tmp = []
+
     def forward(self, x):
         x = x.flatten(2)
         x = self.mix(x)
@@ -76,7 +78,7 @@ def print_nb_params(m):
 
 def main():
     x = torch.randn(1, 1024, 20, 20)
-    agg = MixVPR(
+    agg = MixMixVPR(
         in_channels=1024,
         in_h=20,
         in_w=20,

@@ -1,3 +1,5 @@
+import argparse
+
 from os.path import isfile, join, exists
 
 from pathlib import Path
@@ -155,18 +157,26 @@ class Evaluation:
         print(f'Average rotation error: {sum(self.rotation_error)/len(self.rotation_error)}')
 
 
-method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvlad']
+method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvpr']
 
-index_gps_dir = '/home/moon/Documents/VPR/eval/0519_front_gt.txt'
 query_gps_dir = '/home/moon/Documents/VPR/eval/0828_front_gt.txt'
+index_gps_dir = '/home/moon/Documents/VPR/eval/0519_front_gt.txt'
 
 
 def main():
 
-    result_dir = Path('/home/moon/Documents/VPR/eval/vpr_results')
-    save_dir = '/home/moon/Documents/VPR/eval/error_results'
+    args = argparse.ArgumentParser()
+    args.add_argument('--method', type=str, default='transvlad',
+                      help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
+    args.add_argument('--version', type=str, default='1')
 
-    result_files = sorted(list(result_dir.glob('*.txt')))
+    options = args.parse_args()
+    version = options.version
+
+    result_dir = Path('/home/moon/Documents/VPR/eval/multiview_results')
+    save_dir = '/home/moon/Documents/VPR/eval/multiview_error'
+
+    result_files = sorted(list(result_dir.glob(f'*{version}_result.txt')))
 
     index_gps = GPS(index_gps_dir)
     query_gps = GPS(query_gps_dir)
@@ -176,13 +186,22 @@ def main():
         result = Result(result_file)
         eval = Evaluation(result, query_gps, index_gps)
         eval.error_calculator()
-        eval.save(f'{save_dir}/{method}.txt')
+        eval.save(f'{save_dir}/{method}{version}.txt')
         eval.error_analysis()
 
 
 def main2():
 
-    method = 'transvlad14'
+    # for test just one method
+
+    args = argparse.ArgumentParser()
+    args.add_argument('--method', type=str, default='transvlad',
+                      help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
+    args.add_argument('--version', type=str, default='')
+
+    options = args.parse_args()
+
+    method = options.method + options.version
 
     result_dir = f'/home/moon/Documents/VPR/eval/vpr_results/{method}_result.txt'
     save_dir = '/home/moon/Documents/VPR/eval/error_results'
@@ -226,3 +245,19 @@ if __name__ == '__main__':
 # 12: 488 -> attention map * image -> mixvpr
 # 13: only mixvpr
 # 14: 340 -> 12 with normalize
+
+# multiview
+# convap: 554 -> 552 
+# cosplace: 17 -> 66
+# gem: 374 -> 336
+# mixvpr: 11 -> 14
+# netvlad: 136 -> 110
+# transvpr: 122 -> 64
+
+# 1: only front
+# convap: 630
+# cosplace: 22
+# gem: 404
+# mixvpr: 21
+# netvlad: 145
+# transvpr: 127
