@@ -5,7 +5,8 @@ import torchvision
 from torch import nn
 from typing import Tuple
 
-from layers import Flatten, L2Norm, GeM
+from cosplace_model.layers import Flatten, L2Norm, GeM
+# from layers import Flatten, L2Norm, GeM
 
 # The number of channels in the last convolutional layer, the one before average pooling
 CHANNELS_NUM_IN_LAST_CONV = {
@@ -37,6 +38,7 @@ class GeoLocalizationNet(nn.Module):
         super().__init__()
         assert backbone in CHANNELS_NUM_IN_LAST_CONV, f"backbone must be one of {list(CHANNELS_NUM_IN_LAST_CONV.keys())}"
         self.backbone, features_dim = get_backbone(backbone, train_all_layers)
+        
         self.aggregation = nn.Sequential(
             L2Norm(),
             GeM(),
@@ -46,7 +48,11 @@ class GeoLocalizationNet(nn.Module):
         )
     
     def forward(self, x):
-        x = self.backbone(x)
+        # x = self.backbone(x)
+
+        # x: (1,2048,10,10)
+        # print(f'after backbone: {x.shape}')
+
         x = self.aggregation(x)
         return x
 
@@ -112,7 +118,7 @@ def main():
 
     x = torch.randn(1,3,320,320).to(device)
 
-    model = GeoLocalizationNet(backbone="ResNet50", fc_output_dim=256, train_all_layers=False).to(device)
+    model = GeoLocalizationNet(backbone="ResNet50", fc_output_dim=512, train_all_layers=False).to(device)
 
     output = model(x)
 

@@ -267,3 +267,5 @@ if __name__ == '__main__':
 # transvlad3: mixvpr mean attention: soemthing4: 52.84
 # transvlad4: mixvpr with channel projection + mean: st4: 52.8967
 # transvlad5: mixvpr with ch proj, sum, st4: 52.8967
+# transvlad6: mixvpr --mix--> cosplace(only agg): st5: 35.427
+# transvlad7: mixvpr, after projection: st5: 56.477

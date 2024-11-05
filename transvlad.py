@@ -89,11 +89,12 @@ class TransVLAD:
                 'out_channels' : 256,
                 'mix_depth' : 4,
                 'mlp_ratio': 1,
-                'out_rows' : 2 # the output dim will be (out_rows * out_channels)
+                'out_rows' : 2, # the output dim will be (out_rows * out_channels)
+                'is_mix' : True
             })
         
-        state_dict = torch.load(WEIGHTS['mixpvr'])
-        mixvpr_model.load_state_dict(state_dict)
+        mixvpr_state_dict = torch.load(WEIGHTS['mixpvr'])
+        mixvpr_model.load_state_dict(mixvpr_state_dict)
 
         mixvpr_model = mixvpr_model.to(self.device)
         mixvpr_model.eval()
@@ -105,7 +106,7 @@ class TransVLAD:
         cos_model.load_state_dict(cos_model_state_dict)
         cos_model = cos_model.to(self.device)
         cos_model.eval()
-        self.cos_model = cos_model 
+        self.cos_model = cos_model
 
         # var
         self.z_normalized_mask = []
@@ -152,7 +153,6 @@ class TransVLAD:
         # mid attention mask test
         # self.z_normalized_mask = attention_mask[0, 1, :]
 
-
     def local_vlad(self, image_tensor):
         
         mask_len = len(self.z_normalized_mask)
@@ -184,8 +184,7 @@ class TransVLAD:
             self.vlad_matrix = local_vlad_pca.detach().cpu().numpy()
                     
         torch.cuda.empty_cache()
-
-    
+ 
     def something(self, image_tensor):
 
         with torch.no_grad():
@@ -214,7 +213,6 @@ class TransVLAD:
 
         return normalized_prob_map
             # return self.mixvpr_model(attention_map.to(self.device)).detach().cpu().numpy()
-
 
     def something2(self , image_tensor):
         with torch.no_grad():
@@ -274,7 +272,6 @@ class TransVLAD:
 
         return concatenated_descriptor.sum(dim = 0, keepdim = True).detach().cpu().numpy()
 
-
     def something4(self, image_tensor):
 
         with torch.no_grad():
@@ -314,7 +311,26 @@ class TransVLAD:
     def something5(self, image_tensor):
 
         with torch.no_grad():
-            pass
+
+            mix = self.mixvpr_model(image_tensor.to(self.device))
+            
+            # print(mix.shape)
+            # x = torch.randn(1,2048,10,10)
+
+            # mix: (1, 1024, 400)
+            # (1, 1024, 400) -> (1, 2048, 200)
+            mix = F.interpolate(mix, size=200, mode='linear', align_corners=False)
+            mix = mix.repeat(1,2,1)
+
+            # (1, 2048, 200) -> (1, 2048, 100)
+            mix = F.interpolate(mix, size=100, mode='linear', align_corners=False)
+
+            # (1, 2048, 100) -> (1, 2048, 10, 10)
+            mix = mix.view(1, 2048, 10, 10)
+
+            tmp = self.cos_model(mix.to(self.device)) 
+
+            return tmp.detach().cpu().numpy()
 
         torch.cuda.empty_cache()
 
@@ -329,7 +345,7 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something4(image_tensor)
+            self.matrix[indices_np, :] = self.something5(image_tensor)
 
 
     def get_matrix(self):
@@ -347,7 +363,7 @@ def main():
 
     for image_tensor, id in tqdm(loader):
 
-        extractor.something4(image_tensor)
+        extractor.something5(image_tensor)
 
 if __name__ == '__main__':
     main()

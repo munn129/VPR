@@ -34,7 +34,7 @@ class MixVPR(nn.Module):
                  mix_depth=1,
                  mlp_ratio=1,
                  out_rows=4,
-                 ) -> None:
+                 is_mix=False) -> None:
         super().__init__()
 
         self.in_h = in_h # height of input feature maps
@@ -54,13 +54,18 @@ class MixVPR(nn.Module):
         ])
         self.channel_proj = nn.Linear(in_channels, out_channels)
         self.row_proj = nn.Linear(hw, out_rows)
+        self.is_mix = is_mix
 
     def forward(self, x):
+
         # x: (1,1024,20,20)
         x = x.flatten(2)
         # x: (1,1024,400)
         x = self.mix(x)
         # x: (1,1024,400)
+
+        if self.is_mix:
+            return x
 
         # attention_mask = F.softmax(x, dim = -1)
         # attention_mask = attention_mask.mean(dim=1)
@@ -71,18 +76,19 @@ class MixVPR(nn.Module):
         # x: (1,400,1024)
         x = x.permute(0, 2, 1)
         # x: (1,1024,400)
-        
-        attention_mask = F.softmax(x, dim = -1)
-        # attention_mask: (1, 1024,400)
-        attention_mask = attention_mask.sum(dim=1)
-        attention_mask /= attention_mask.shape[1]
-        # attention_mask: (1,400)
+
+        # attention_mask = F.softmax(x, dim = -1)
+        # # attention_mask: (1, 1024,400)
+        # attention_mask = attention_mask.sum(dim=1)
+        # attention_mask /= attention_mask.shape[1]
+        # # attention_mask: (1,400)
 
         x = self.row_proj(x)
         # x: (1,1024,4)
         x = F.normalize(x.flatten(1), p=2, dim=-1)
         # x: (1, 4096)
-        return x, attention_mask
+        return x
+
 
 
 # -------------------------------------------------------------------------------
@@ -94,19 +100,46 @@ def print_nb_params(m):
 
 
 def main():
-    x = torch.randn(1, 1024, 20, 20)
+    # x = torch.randn(1, 2048, 10, 10)
+    # agg = MixVPR(
+    #     in_channels=2048,
+    #     in_h=10,
+    #     in_w=10,
+    #     out_channels=1024,
+    #     mix_depth=4,
+    #     mlp_ratio=1,
+    #     out_rows=4)
+    
+    # y = agg.mix(x.view(1,2048,100))
+    # print(y.shape)
+    
+    # x = torch.randn(1, 1024, 20, 20)
+    # agg = MixVPR(
+    #     in_channels=1024,
+    #     in_h=20,
+    #     in_w=20,
+    #     out_channels=1024,
+    #     mix_depth=4,
+    #     mlp_ratio=1,
+    #     out_rows=4)
+
     agg = MixVPR(
         in_channels=1024,
         in_h=20,
         in_w=20,
-        out_channels=1024,
+        out_channels=256,
         mix_depth=4,
         mlp_ratio=1,
-        out_rows=4)
+        out_rows=2,
+        is_mix=True)
+    
+    x = torch.randn(1,1024,400)
+    y = agg(x)
+    print(y.shape)
 
-    print_nb_params(agg)
-    output, att = agg(x)
-    print(output.shape, att.shape)
+    # print_nb_params(agg)
+    # output, att = agg(x)
+    # print(output.shape, att.shape)
 
 
 if __name__ == '__main__':
