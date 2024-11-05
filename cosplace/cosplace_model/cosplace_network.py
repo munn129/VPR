@@ -5,7 +5,7 @@ import torchvision
 from torch import nn
 from typing import Tuple
 
-from cosplace_model.layers import Flatten, L2Norm, GeM
+from layers import Flatten, L2Norm, GeM
 
 # The number of channels in the last convolutional layer, the one before average pooling
 CHANNELS_NUM_IN_LAST_CONV = {
@@ -104,3 +104,20 @@ def get_backbone(backbone_name : str, train_all_layers : bool) -> Tuple[torch.nn
     features_dim = CHANNELS_NUM_IN_LAST_CONV[backbone_name]
     
     return backbone, features_dim
+
+
+def main():
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    x = torch.randn(1,3,320,320).to(device)
+
+    model = GeoLocalizationNet(backbone="ResNet50", fc_output_dim=256, train_all_layers=False).to(device)
+
+    output = model(x)
+
+    print(output.shape)
+
+
+if __name__ == '__main__':
+    main()
