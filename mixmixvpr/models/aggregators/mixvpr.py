@@ -57,15 +57,20 @@ class MixMixVPR(nn.Module):
 
         self.tmp = []
 
+        self.pca = PCA(n_components=400)
+
     def forward(self, x):
         x = x.flatten(2)
         x = self.mix(x)
+
+        attention_mask = F.softmax(x, dim = -1)
+
         x = x.permute(0, 2, 1)
         x = self.channel_proj(x)
         x = x.permute(0, 2, 1)
         x = self.row_proj(x)
         x = F.normalize(x.flatten(1), p=2, dim=-1)
-        return x
+        return x, attention_mask
 
 
 # -------------------------------------------------------------------------------

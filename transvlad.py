@@ -119,6 +119,7 @@ class TransVLAD:
                         [0.229, 0.224, 0.225])]
         )
 
+
     def z_normal(self, image_tensor):
         attention_mask = []
         self.z_normalized_mask = []
@@ -274,6 +275,50 @@ class TransVLAD:
         return concatenated_descriptor.sum(dim = 0, keepdim = True).detach().cpu().numpy()
 
 
+    def something4(self, image_tensor):
+
+        with torch.no_grad():
+
+            mixvpr_des, attention_mask = self.mixvpr_model(image_tensor.to(self.device))
+
+            # attention_mask.shape: (1, 400)
+            attention_mask = attention_mask.view(1,20,20)
+
+            attention_mask = attention_mask.sum(dim = 0, keepdim = True)
+
+            attention_mask = attention_mask.view(1,1,2,10,2,10).sum(dim=(3,5))
+
+            attention_mask = attention_mask.view(1,4)
+            
+            W = int(image_tensor.shape[2]/2)
+            H = int(image_tensor.shape[3]/2)
+
+            top_left = image_tensor[:, :, :W, :H]
+            top_right = image_tensor[:, :, :W, H:]
+            bottom_left = image_tensor[:, :, W:, :H]
+            bottom_right = image_tensor[:, :, W:, H:]
+
+            top_left_des = self.cos_model(top_left.to(self.device))
+            top_right_des = self.cos_model(top_right.to(self.device))
+            bottom_left_des = self.cos_model(bottom_left.to(self.device))
+            bottom_right_des = self.cos_model(bottom_right.to(self.device))
+
+            # 4 * 512
+            concatenated_descriptor = torch.cat((top_left_des, top_right_des, bottom_left_des, bottom_right_des), dim = 0)
+
+        torch.cuda.empty_cache()
+
+        return (attention_mask @ concatenated_descriptor).detach().cpu().numpy()
+
+
+    def something5(self, image_tensor):
+
+        with torch.no_grad():
+            pass
+
+        torch.cuda.empty_cache()
+
+
     def feature_extract(self):
         
         for image_tensor, indices in tqdm(self.loader):
@@ -284,7 +329,7 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something3(image_tensor)
+            self.matrix[indices_np, :] = self.something4(image_tensor)
 
 
     def get_matrix(self):
@@ -302,7 +347,7 @@ def main():
 
     for image_tensor, id in tqdm(loader):
 
-        extractor.something3(image_tensor)
+        extractor.something4(image_tensor)
 
 if __name__ == '__main__':
     main()

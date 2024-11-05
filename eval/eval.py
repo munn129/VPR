@@ -262,4 +262,6 @@ if __name__ == '__main__':
 # netvlad: 145
 # transvpr: 127
 # transvlad1: probmap + cosplace: something2: 55
-# sum: something3: 52
+# transvlad2: sum: something3: 52.8966
+# transvlad3: mixvpr mean attention: soemthing4: 52.84
+# transvlad4: mixvpr with channel projection + mean: st4: 52.8967

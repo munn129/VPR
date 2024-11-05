@@ -58,12 +58,20 @@ class MixVPR(nn.Module):
     def forward(self, x):
         x = x.flatten(2)
         x = self.mix(x)
+
+        # attention_mask = F.softmax(x, dim = -1)
+        # attention_mask = attention_mask.mean(dim=1)
+        
         x = x.permute(0, 2, 1)
         x = self.channel_proj(x)
         x = x.permute(0, 2, 1)
+        
+        attention_mask = F.softmax(x, dim = -1)
+        attention_mask = attention_mask.mean(dim=1)
+        
         x = self.row_proj(x)
         x = F.normalize(x.flatten(1), p=2, dim=-1)
-        return x
+        return x, attention_mask
 
 
 # -------------------------------------------------------------------------------
@@ -86,7 +94,7 @@ def main():
         out_rows=4)
 
     print_nb_params(agg)
-    output = agg(x)
+    output, att = agg(x)
     print(output.shape)
 
 
