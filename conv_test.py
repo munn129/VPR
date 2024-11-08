@@ -409,10 +409,10 @@ def main():
 
     # patch_netvlad_essential(image_tensor, device)
     # cosplace_essential(image_tensor, device)
-    mixvpr_essential(image_tensor, device)
+    # mixvpr_essential(image_tensor, device)
     # gem_essential(image_tensor, device)
     # covAP_essential(image_tensor, device)
-    # transVPR_essential(image_tensor, device)
+    transVPR_essential(image_tensor, device)
     # transvlad(image_tensor, device)
 
     torch.cuda.empty_cache()
@@ -491,7 +491,7 @@ def trans_mix_poc():
 
 
 if __name__ == '__main__':
-    # main()
+    main()
     # netvlad_minimum_test()
     # transvlad_main()
-    trans_mix_poc()
+    # trans_mix_poc()

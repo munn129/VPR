@@ -58,17 +58,21 @@ class MixVPR(nn.Module):
 
     def forward(self, x):
 
+
         # x: (1,1024,20,20)
         x = x.flatten(2)
+
         # x: (1,1024,400)
         x = self.mix(x)
         # x: (1,1024,400)
 
         if self.is_mix:
             return x
-
+        
         # attention_mask = F.softmax(x, dim = -1)
-        # attention_mask = attention_mask.mean(dim=1)
+        # attention_mask = attention_mask.sum(dim=1)
+        # attention_mask = x.sum(dim=1)
+
         
         x = x.permute(0, 2, 1)
         # x: (1,400,1024)
@@ -81,7 +85,7 @@ class MixVPR(nn.Module):
         # # attention_mask: (1, 1024,400)
         # attention_mask = attention_mask.sum(dim=1)
         # attention_mask /= attention_mask.shape[1]
-        # # attention_mask: (1,400)
+        # # # attention_mask: (1,400)
 
         x = self.row_proj(x)
         # x: (1,1024,4)

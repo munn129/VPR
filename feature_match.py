@@ -8,10 +8,11 @@ from tqdm import tqdm
 feature_dir_prefix = '/media/moon/T7 Shield/multiview_results'
 image_dir_prefix = '/media/moon/moon_ssd/moon_ubuntu/post_oxford/'
 method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvpr']
+dir = 'concat'
 
 
 def imagename_generator(image_dir_prefix, image_dir_postfix):
-    image_dir = image_dir_prefix + image_dir_postfix + '/concat'
+    image_dir = image_dir_prefix + image_dir_postfix + f'/{dir}'
     imagename_list = sorted(list(Path(image_dir).glob('*.png')))
     return [str(i)[len(image_dir_prefix):] for i in imagename_list]
 

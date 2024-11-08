@@ -328,11 +328,51 @@ class TransVLAD:
             # (1, 2048, 100) -> (1, 2048, 10, 10)
             mix = mix.view(1, 2048, 10, 10)
 
-            tmp = self.cos_model(mix.to(self.device)) 
+            tmp = self.cos_model(mix.to(self.device))
 
             return tmp.detach().cpu().numpy()
 
         torch.cuda.empty_cache()
+
+    def something6(self, image_tensor):
+
+        with torch.no_grad():
+            
+            mix_vpr = self.mixvpr_model(image_tensor.to(self.device)) # 1 * 1024 * 400
+            
+            patch_feat = self.trans_model(image_tensor.to(self.device))
+            _, mask = self.trans_model.pool(patch_feat) # 1 * 3 * 400
+
+            mask = mask.sum(dim = 1, keepdim = True)
+            mask /= 3 # 1 * 1 * 400
+
+            extened_mask = mask.repeat(1, 1024, 1) # 1 * 1024 * 400
+
+            # mixmix = torch.cat((mix_vpr, extened_mask), dim = 1) # 1* 2048 * 400
+
+            mixmix = []
+            id_1 = 0
+            id_2 = 0
+
+            for i in range(mix_vpr.shape[1] * 2):
+                if i%2 :
+                    mixmix.append(mix_vpr[:,id_1,:])
+                    id_1 += 1
+                else:
+                    mixmix.append(extened_mask[:,id_2,:])
+                    id_2 += 1
+
+            mixmix = torch.cat(mixmix).unsqueeze(0)
+
+            mixmix = F.interpolate(mixmix, size=100, mode='linear', align_corners=False) # 1 * 2048 * 100
+
+            mixmix = mixmix.view(1, 2048, 10, 10)
+
+            tmp = self.cos_model(mixmix.to(self.device))
+
+        torch.cuda.empty_cache()
+
+        return tmp.detach().cpu().numpy()
 
 
     def feature_extract(self):
@@ -345,7 +385,7 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something5(image_tensor)
+            self.matrix[indices_np, :] = self.something6(image_tensor)
 
 
     def get_matrix(self):
@@ -363,7 +403,7 @@ def main():
 
     for image_tensor, id in tqdm(loader):
 
-        extractor.something5(image_tensor)
+        extractor.something6(image_tensor)
 
 if __name__ == '__main__':
     main()

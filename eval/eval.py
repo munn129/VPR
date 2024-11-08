@@ -159,8 +159,9 @@ class Evaluation:
 
 method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvpr']
 
-query_gps_dir = '/home/moon/Documents/VPR/eval/0828_concat_gt.txt'
-index_gps_dir = '/home/moon/Documents/VPR/eval/0519_concat_gt.txt'
+dir = 'concat'
+query_gps_dir = f'/home/moon/Documents/VPR/eval/0828_{dir}_gt.txt'
+index_gps_dir = f'/home/moon/Documents/VPR/eval/0519_{dir}_gt.txt'
 
 
 def main():
@@ -269,3 +270,6 @@ if __name__ == '__main__':
 # transvlad5: mixvpr with ch proj, sum, st4: 52.8967
 # transvlad6: mixvpr --mix--> cosplace(only agg): st5: 35.427
 # transvlad7: mixvpr, after projection: st5: 56.477
+# transvlad8: 6 with only front: 53.67
+# scenario 9: st5 + transvpr: 56.581
+# 10: st6 + inter(mix + trans): 55.98

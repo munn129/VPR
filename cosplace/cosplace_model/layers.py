@@ -16,7 +16,7 @@ class GeM(nn.Module):
         self.eps = eps
     
     def forward(self, x):
-        # print(f'after GeM: {x.shape}')
+        # print(f'before GeM: {x.shape}')
         return gem(x, p=self.p, eps=self.eps)
     
     def __repr__(self):
@@ -28,7 +28,7 @@ class Flatten(torch.nn.Module):
         super().__init__()
     
     def forward(self, x):
-        # print(f'after flatten: {x.shape}')
+        # print(f'before flatten: {x.shape}')
         assert x.shape[2] == x.shape[3] == 1, f"{x.shape[2]} != {x.shape[3]} != 1"
         return x[:, :, 0, 0]
 
@@ -39,5 +39,5 @@ class L2Norm(nn.Module):
         self.dim = dim
     
     def forward(self, x):
-        # print(f'after l2norm: {x.shape}')
+        # print(f'before l2norm: {x.shape}')
         return F.normalize(x, p=2.0, dim=self.dim)
