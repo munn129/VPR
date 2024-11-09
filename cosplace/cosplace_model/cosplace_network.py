@@ -117,6 +117,7 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     x = torch.randn(1,3,320,320).to(device)
+    x = torch.randn(1,2048,10,10).to(device)
 
     model = GeoLocalizationNet(backbone="ResNet50", fc_output_dim=512, train_all_layers=False).to(device)
 

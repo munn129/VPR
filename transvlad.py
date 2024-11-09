@@ -120,6 +120,11 @@ class TransVLAD:
                         [0.229, 0.224, 0.225])]
         )
 
+        self.normalize = tvf.Compose(
+            [tvf.Normalize([0.485, 0.456, 0.406],
+                        [0.229, 0.224, 0.225])]
+        )
+
 
     def z_normal(self, image_tensor):
         attention_mask = []
@@ -373,6 +378,27 @@ class TransVLAD:
         torch.cuda.empty_cache()
 
         return tmp.detach().cpu().numpy()
+    
+    def something7(self, image_tensor):
+
+        with torch.no_grad():
+            _, mask = self.trans_model.pool(self.trans_model(image_tensor.to(self.device))) # 1 * 3 * 400
+            mask = mask.view(1,3, 20, 20)
+            mask = mask.repeat_interleave(16, dim = 2).repeat_interleave(16, dim = 3) # 1,3,320,320
+            
+            trans_mixvpr_des = self.mixvpr_model(mask.to(self.device)) # 1 * 1024 * 400
+            mixvpr_des = self.mixvpr_model(image_tensor.to(self.device)) # 1 * 1024 * 400
+
+            concat_des = torch.cat((trans_mixvpr_des, mixvpr_des), dim = 1) # 1*2048*400
+            concat_des = F.interpolate(concat_des, size=100, mode='linear', align_corners=False) # 1 * 2048 * 100
+
+            concat_des = concat_des.view(1, 2048, 10, 10)
+
+            descriptor = self.cos_model(concat_des.to(self.device))
+
+        torch.cuda.empty_cache()
+
+        return descriptor.detach().cpu().numpy()
 
 
     def feature_extract(self):
@@ -385,7 +411,7 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something6(image_tensor)
+            self.matrix[indices_np, :] = self.something7(image_tensor)
 
 
     def get_matrix(self):
@@ -403,7 +429,7 @@ def main():
 
     for image_tensor, id in tqdm(loader):
 
-        extractor.something6(image_tensor)
+        extractor.something7(image_tensor)
 
 if __name__ == '__main__':
     main()

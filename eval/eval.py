@@ -273,3 +273,4 @@ if __name__ == '__main__':
 # transvlad8: 6 with only front: 53.67
 # scenario 9: st5 + transvpr: 56.581
 # 10: st6 + inter(mix + trans): 55.98
+# 11: mix -> cos, trans -> cos, +, st7: 47.939
