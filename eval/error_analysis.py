@@ -4,21 +4,29 @@ from os.path import isfile, join, exists
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
+analysis_save_prefix = './analysis_result'
 
+# multiview sync data only front result
+front_convap = './multiview_error/convap1.txt'
+front_cosplace = './multiview_error/cosplace1.txt'
+front_gem = './multiview_error/gem1.txt'
+front_mixvpr = './multiview_error/mixvpr1.txt'
+front_netvlad = './multiview_error/netvlad1.txt'
+front_something = './error_results/transvlad8.txt'
 
-'''
-TODO
-- average error:
-    - translation
-    - rotation
-- recall rate:
-    - translation: 0.25, 0.5, 1, 5, 10
-    - rotation: 1, 2, 5, 10
-    - both: ?
-- Pearson correlation coefficient...?
-'''
+# multiview image
+multi_convap = './multiview_error/convap.txt'
+multi_cosplace = './multiview_error/cosplace.txt'
+multi_gem = './multiview_error/gem.txt'
+multi_mixvpr = './multiview_error/mixvpr.txt'
+multi_netvlad = './multiview_error/netvlad.txt'
+multi_something = './error_results/transvlad6.txt'
+
+file_list = [front_convap, front_cosplace, front_gem, front_mixvpr, front_netvlad, front_something,
+             multi_convap, multi_cosplace, multi_gem, multi_mixvpr, multi_netvlad, multi_something]
+
+name_list = ['front_convap', 'front_cosplace', 'front_gem', 'front_mixvpr', 'front_netvlad', 'front_something',
+             'multi_convap', 'multi_cosplace', 'multi_gem', 'multi_mixvpr', 'multi_netvlad', 'multi_something']
 
 def dictionary_updater(cnt_dict, critia) -> None:
     try:
@@ -27,32 +35,20 @@ def dictionary_updater(cnt_dict, critia) -> None:
         cnt_dict[critia] = 1
 
 def main():
-    # direction = 'concat'
-    # folder = f'new_ox/{direction}'
 
-    gap_list = ['200', '300', '400', '500']
-    method = 'patch'
+    t_err_check_list = [1, 2.5, 5, 7.5, 10]
+    r_err_check_list = [1, 2.5, 5, 7.5, 10]
+    if len(t_err_check_list) != len(r_err_check_list):
+        raise Exception('check lists are not same length')
 
-    for direction in gap_list:
-
-        folder = f'icrca/{direction}'
-
-
-        # both lists must have same length
-        t_err_check_list = [1, 2.5, 5, 7.5, 10]
-        r_err_check_list = [1, 2.5, 5, 7.5, 10]
-        if len(t_err_check_list) != len(r_err_check_list):
-            raise Exception('check lists are not same length')
-
-        file = f'{method}_error.txt'
-        error_result_dir = os.path.join(folder, file)
-
+    for result, name in zip(file_list, name_list):
+        
         translation_error_list = []
         rotation_error_list = []
 
         cnt_dict = {}
 
-        with open(error_result_dir, 'r') as file:
+        with open(result, 'r') as file:
             for line in file:
                 if line[0] == '#': continue
 
@@ -80,8 +76,10 @@ def main():
                     if translation_error < float(t) and rotation_error < float(r):
                         dictionary_updater(cnt_dict, f'{str(t)}_m_and_{str(r)}_degree')
 
-        print(f'########## Result of {error_result_dir} ##########')        
-        with open(f'{direction}_{method}.txt', 'w') as file:
+
+        print(f'########## Result of {name} ##########')
+
+        with open(join(analysis_save_prefix, f'{name}.txt'), 'w') as file:
             # recall rate
             for i in cnt_dict:
                 sentence = f'recall rate @ {i}: {cnt_dict[i]/len(translation_error_list) *100} %'
@@ -107,7 +105,7 @@ def main():
             # trimmed translation error(critia: translation error)
 
 
-        print(f'{direction}_{method} is saved')
+        print(f'{name} is saved')
 
 if __name__ == '__main__':
     main()
