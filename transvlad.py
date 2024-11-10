@@ -385,6 +385,7 @@ class TransVLAD:
             _, mask = self.trans_model.pool(self.trans_model(image_tensor.to(self.device))) # 1 * 3 * 400
             mask = mask.view(1,3, 20, 20)
             mask = mask.repeat_interleave(16, dim = 2).repeat_interleave(16, dim = 3) # 1,3,320,320
+            # mask = self.normalize(mask)
             
             trans_mixvpr_des = self.mixvpr_model(mask.to(self.device)) # 1 * 1024 * 400
             mixvpr_des = self.mixvpr_model(image_tensor.to(self.device)) # 1 * 1024 * 400
