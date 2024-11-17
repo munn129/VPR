@@ -275,3 +275,5 @@ if __name__ == '__main__':
 # 10: st6 + inter(mix + trans): 55.98
 # 11: mix -> cos, trans -> cos, +, st7: 47.939
 # 12: 11 with normalization: 51.007
+# 13: 4 image each mix and GeM/ something8 (image size 640640): 23.71 
+# 14: ablation: without mix: 42.404

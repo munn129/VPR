@@ -401,6 +401,46 @@ class TransVLAD:
 
         return descriptor.detach().cpu().numpy()
 
+    
+    def something8(self, image_tensor):
+        
+        # image_tensor: 1,3,320,320
+
+        with torch.no_grad():
+            W = int(image_tensor.shape[2]/2)
+            H = int(image_tensor.shape[3]/2)
+
+            top_left = image_tensor[:, :, :W, :H]
+            top_right = image_tensor[:, :, :W, H:]
+            bottom_left = image_tensor[:, :, W:, :H]
+            bottom_right = image_tensor[:, :, W:, H:]
+            # size must 1,3,320,320
+
+            top_left_mix = self.mixvpr_model(top_left.to(self.device))
+            top_right_mix = self.mixvpr_model(top_right.to(self.device))
+            bottom_left_mix = self.mixvpr_model(bottom_left.to(self.device))
+            bottom_right_mix = self.mixvpr_model(bottom_right.to(self.device))
+            # 1, 1024, 400
+
+            combined_mix = torch.cat([top_left_mix, top_right_mix, bottom_left_mix, bottom_right_mix], dim=1)
+            # 1, 4096, 400
+
+            # conv_layer = torch.nn.Conv1d(in_channels=4096, out_channels=2048, kernel_size=1)
+            # reduced_tensor = conv_layer(combined_mix)
+            reduced_tensor = combined_mix.view(1, 2048, 2, 400).mean(dim=2)
+            # 1, 2048, 400
+
+            interpolated = F.interpolate(reduced_tensor, size=100, mode='linear', align_corners=False)
+            # 1, 2048, 100
+
+            interpolated = interpolated.view(1, 2048, 10, 10)
+
+            des = self.cos_model(interpolated.to(self.device))
+
+        torch.cuda.empty_cache()
+
+        return des.detach().cpu().numpy()
+
 
     def feature_extract(self):
         
@@ -412,7 +452,7 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something7(image_tensor)
+            self.matrix[indices_np, :] = self.something5(image_tensor)
 
 
     def get_matrix(self):
@@ -420,7 +460,7 @@ class TransVLAD:
     
 def main():
 
-    dir = '/media/moon/moon_ssd/moon_ubuntu/post_oxford/0519/front'
+    dir = '/media/moon/moon_ssd/moon_ubuntu/post_oxford/0519/concat'
 
     loader = DataLoader(CustomDataset(Path(dir), 0),
                         batch_size = 1,
@@ -430,7 +470,7 @@ def main():
 
     for image_tensor, id in tqdm(loader):
 
-        extractor.something7(image_tensor)
+        extractor.something8(image_tensor)
 
 if __name__ == '__main__':
     main()

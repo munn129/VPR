@@ -12,6 +12,7 @@ front_cosplace = './multiview_error/cosplace1.txt'
 front_gem = './multiview_error/gem1.txt'
 front_mixvpr = './multiview_error/mixvpr1.txt'
 front_netvlad = './multiview_error/netvlad1.txt'
+front_transvpr = './multiview_error/transvpr1.txt'
 front_something = './error_results/transvlad8.txt'
 
 # multiview image
@@ -20,13 +21,14 @@ multi_cosplace = './multiview_error/cosplace.txt'
 multi_gem = './multiview_error/gem.txt'
 multi_mixvpr = './multiview_error/mixvpr.txt'
 multi_netvlad = './multiview_error/netvlad.txt'
+multi_transvpr = './multiview_error/transvpr.txt'
 multi_something = './error_results/transvlad6.txt'
 
-file_list = [front_convap, front_cosplace, front_gem, front_mixvpr, front_netvlad, front_something,
-             multi_convap, multi_cosplace, multi_gem, multi_mixvpr, multi_netvlad, multi_something]
+file_list = [front_convap, front_cosplace, front_gem, front_mixvpr, front_netvlad, front_transvpr, front_something,
+             multi_convap, multi_cosplace, multi_gem, multi_mixvpr, multi_netvlad, multi_transvpr, multi_something]
 
-name_list = ['front_convap', 'front_cosplace', 'front_gem', 'front_mixvpr', 'front_netvlad', 'front_something',
-             'multi_convap', 'multi_cosplace', 'multi_gem', 'multi_mixvpr', 'multi_netvlad', 'multi_something']
+name_list = ['front_convap', 'front_cosplace', 'front_gem', 'front_mixvpr', 'front_netvlad', 'front_transvpr', 'front_something',
+             'multi_convap', 'multi_cosplace', 'multi_gem', 'multi_mixvpr', 'multi_netvlad', 'multi_transvpr', 'multi_something']
 
 def dictionary_updater(cnt_dict, critia) -> None:
     try:
