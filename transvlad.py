@@ -410,10 +410,10 @@ class TransVLAD:
             W = int(image_tensor.shape[2]/2)
             H = int(image_tensor.shape[3]/2)
 
-            top_left = image_tensor[:, :, :W, :H]
-            top_right = image_tensor[:, :, :W, H:]
-            bottom_left = image_tensor[:, :, W:, :H]
-            bottom_right = image_tensor[:, :, W:, H:]
+            top_left = F.interpolate(image_tensor[:, :, :W, :H], size=(320,320), mode='bilinear', align_corners=False)
+            top_right = F.interpolate(image_tensor[:, :, :W, H:], size=(320,320), mode='bilinear', align_corners=False)
+            bottom_left = F.interpolate(image_tensor[:, :, W:, :H], size=(320,320), mode='bilinear', align_corners=False)
+            bottom_right = F.interpolate(image_tensor[:, :, W:, H:], size=(320,320), mode='bilinear', align_corners=False)
             # size must 1,3,320,320
 
             top_left_mix = self.mixvpr_model(top_left.to(self.device))
@@ -452,7 +452,7 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something5(image_tensor)
+            self.matrix[indices_np, :] = self.something8(image_tensor)
 
 
     def get_matrix(self):

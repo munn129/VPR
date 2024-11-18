@@ -277,3 +277,6 @@ if __name__ == '__main__':
 # 12: 11 with normalization: 51.007
 # 13: 4 image each mix and GeM/ something8 (image size 640640): 23.71 
 # 14: ablation: without mix: 42.404
+# 15: 320*320 with scenario 13: 28.38
+
+# need to image re-processing
