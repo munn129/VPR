@@ -5,7 +5,7 @@ import faiss
 from pathlib import Path
 from tqdm import tqdm
 
-feature_dir_prefix = '/media/moon/T7 Shield/multiview_results'
+feature_dir_prefix = '/media/moon/T7 Shield/ablation_study_with_image_size'
 image_dir_prefix = '/media/moon/moon_ssd/moon_ubuntu/post_oxford/'
 method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvpr']
 dir = 'concat'
@@ -54,7 +54,7 @@ def main():
             # val: array([15916])
             save_list.append(f'{query_imagename_list[idx]} {index_imagename_list[val[0]]}')
 
-        save_file_name = f'./eval/multiview_results/{method_list[i]}{version}_result.txt'
+        save_file_name = f'./eval/image_size/{method_list[i]}{version}_result.txt'
 
         with open(save_file_name, 'w') as file:
             file.write('# query index\n')
@@ -111,5 +111,5 @@ def main2():
             file.write(line + '\n')
 
 if __name__ == '__main__':
-    # main()
-    main2()
+    main()
+    # main2()

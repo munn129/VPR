@@ -174,8 +174,8 @@ def main():
     options = args.parse_args()
     version = options.version
 
-    result_dir = Path('/home/moon/Documents/VPR/eval/multiview_results')
-    save_dir = '/home/moon/Documents/VPR/eval/multiview_error'
+    result_dir = Path('/home/moon/Documents/VPR/eval/image_size')
+    save_dir = '/home/moon/Documents/VPR/eval/image_size'
 
     result_files = sorted(list(result_dir.glob(f'*{version}_result.txt')))
 
@@ -218,8 +218,8 @@ def main2():
 
 
 if __name__ == '__main__':
-    # main()
-    main2()
+    main()
+    # main2()
 
 
 # translation error
@@ -279,4 +279,36 @@ if __name__ == '__main__':
 # 14: ablation: without mix: 42.404
 # 15: 320*320 with scenario 13: 28.38
 
-# need to image re-processing
+# need to image re-processing -> cancel, because front image size is different from other images
+
+# image size 1024 * 1024/concat
+# convap: 560.798
+# cosplace: 66.439
+# gem: 336.820
+# mixvpr: 14.336
+# netvlad:  111.336
+# transvpr: 65.028
+
+# image size 1024 / front
+# convap: 607
+# cosplace: 23.27
+# gem: 403.88
+# mixvpr: 21.76
+# netvlad: 145.47
+# transvpr: 128.127
+
+# image size 640 640 / concat
+# convap: 601.29
+# cosplace: 66.81
+# gem: 340.21
+# mixvpr: 14.53
+# netvlad: 114.12
+# transvpr: 65.09
+
+# image size 640 / front
+# convap: 600.498
+# cosplace: 23.529
+# gem: 403.254
+# mixvpr: 21.869
+# netvlad: 145.670
+# transvpr: 127.653

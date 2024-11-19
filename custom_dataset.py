@@ -12,6 +12,11 @@ transform = tvf.Compose(
         [0.229, 0.224, 0.225])]
 )
 
+resizer = tvf.Compose(
+    [tvf.Resize((640, 640), interpolation=tvf.InterpolationMode.BICUBIC)]
+)
+
+
 class CustomDataset(Dataset):
     def __init__(self, image_path: Path, sub_test = 0):
         if sub_test == 0:
@@ -24,7 +29,9 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, index):
         img_path = self.image_path_list[index]
-        img = Image.open(img_path).convert('RGB')
+        # img = Image.open(img_path).convert('RGB')
+        img = resizer(Image.open(img_path).convert('RGB'))
+
         '''
         image: Tensor
         image path: tuple(str1, str2, ...)

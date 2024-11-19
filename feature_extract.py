@@ -104,5 +104,5 @@ def main2():
     np.save(save_file_dir, extractor.get_matrix())
 
 if __name__ == '__main__':
-    # main()
-    main2()
+    main()
+    # main2()
