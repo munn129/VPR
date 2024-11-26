@@ -163,6 +163,7 @@ dir = 'concat'
 query_gps_dir = f'/home/moon/Documents/VPR/eval/0828_{dir}_gt.txt'
 index_gps_dir = f'/home/moon/Documents/VPR/eval/0519_{dir}_gt.txt'
 
+DIR = 'concatenated'
 
 def main():
 
@@ -174,8 +175,8 @@ def main():
     options = args.parse_args()
     version = options.version
 
-    result_dir = Path('/home/moon/Documents/VPR/eval/image_size')
-    save_dir = '/home/moon/Documents/VPR/eval/image_size'
+    result_dir = Path(f'/home/moon/Documents/VPR/eval/{DIR}')
+    save_dir = f'/home/moon/Documents/VPR/eval/{DIR}'
 
     result_files = sorted(list(result_dir.glob(f'*{version}_result.txt')))
 
@@ -204,8 +205,8 @@ def main2():
 
     method = options.method + options.version
 
-    result_dir = f'/home/moon/Documents/VPR/eval/multiview_results/{method}_result.txt'
-    save_dir = '/home/moon/Documents/VPR/eval/error_results'
+    result_dir = f'/home/moon/Documents/VPR/eval/dim_ex/{method}_result.txt'
+    save_dir = '/home/moon/Documents/VPR/eval/dim_ex'
 
     index_gps = GPS(index_gps_dir)
     query_gps = GPS(query_gps_dir)
@@ -218,8 +219,8 @@ def main2():
 
 
 if __name__ == '__main__':
-    main()
-    # main2()
+    # main()
+    main2()
 
 
 # translation error
@@ -268,9 +269,13 @@ if __name__ == '__main__':
 # transvlad3: mixvpr mean attention: soemthing4: 52.84
 # transvlad4: mixvpr with channel projection + mean: st4: 52.8967
 # transvlad5: mixvpr with ch proj, sum, st4: 52.8967
+
 # transvlad6: mixvpr --mix--> cosplace(only agg): st5: 35.427
+
 # transvlad7: mixvpr, after projection: st5: 56.477
+
 # transvlad8: 6 with only front: 53.67
+
 # scenario 9: st5 + transvpr: 56.581
 # 10: st6 + inter(mix + trans): 55.98
 # 11: mix -> cos, trans -> cos, +, st7: 47.939
@@ -312,3 +317,141 @@ if __name__ == '__main__':
 # mixvpr: 21.869
 # netvlad: 145.670
 # transvpr: 127.653
+
+# scenario 16, something9, twist, concat, mean: 25.61
+# 17/something9/twist/front/mean: 61.467
+# sc17, smth9, twt, cc, sum: 25.61
+
+# vertical cocat
+# convap: 689
+# cosplace: 87
+# gem: 379
+# mixvpr: 73
+# netvlad: 253
+# transvpr: 211
+
+# horizontal concat
+# convap: 566
+# cosplace: 138.847
+# gem: 412.346
+# mixvpr: 29.407
+# netvlad: 207.185
+# transvpr: 161.267
+
+# dim ex
+# 1280_concat_4096 netvlad: 67.145
+# 1280_concat_512 netvlad: 110.604
+# 1280_concat_128 netvlad: 194.918
+# 640_concat_4096 netvlad: 69.144
+# 640_concat_512 netvald: 113.978
+# 640_concat_128 netvlad: 194.036
+# 320_concat_4096 netvlad: 66.808
+# 320_concat_512 netvlad: 110.081
+# 320_concat_128 netvlad: 194.965
+
+# 1280_front_4096 netvlad: 119.517
+# 1280_front_512 netvlad: 145.344
+# 1280_front_128 netvlad: 205.947
+# 640_front_4096 netvlad: 121.001
+# 640_front_512 netvlad: 145.550
+# 640_front_128 netvlad: 206.349
+# 320_front_4096 netvlad: 120.032
+# 320_front_512 netvlad: 145.501
+# 320_front_128 netvlad: 206.585
+
+# 1280_concat_2048 convap 608.253
+# 1280_concat_1024 convap 621.812
+# 1280_concat_512 convap 608.404
+# 1280_concat_256 convap 667.295
+# 1280_concat_128 convap 694.707
+# 640_concat_2048 convap 668.451
+# 640_concat_1024 convap 568.445
+# 640_concat_512 convap 631.219
+# 640_concat_256 convap 564.449
+# 640_concat_128 convap 549.611
+# 320_concat_2048 convap 571.859
+# 320_concat_1024 convap 593.428
+# 320_concat_512 convap 729.207
+# 320_concat_256 convap 604.873
+# 320_concat_128 convap 613.410
+
+# 1280_front_2048 convap 565.405
+# 1280_front_1024 convap 587.518
+# 1280_front_512 convap 621.713
+# 1280_front_256 convap 519.370
+# 1280_front_128 convap 547.198
+# 640_front_2048 convap 604.736
+# 640_front_1024 convap 643.931
+# 640_front_512 convap 506.473
+# 640_front_256 convap 653.620
+# 640_front_128 convap 673.632
+# 320_front_2048 convap 571.859
+# 320_front_1024 convap 593.428
+# 320_front_512 convap 729.207
+# 320_front_256 convap 604.873
+# 320_front_128 convap
+#TODO need to 4096 dim
+
+# 1280_concat_2048 cosplace 57.013
+# 1280_concat_1024 cosplace 64.305
+# 1280_concat_512 cosplace 66.648
+# 1280_concat_256 cosplace 58.870
+# 1280_concat_128 cosplace 64.421
+# 640_concat_2048 cosplace 57.312
+# 640_concat_1024 cosplace 64.288
+# 640_concat_512 cosplace 66.689
+# 640_concat_256 cosplace 58.276
+# 640_concat_128 cosplace 126.656
+# 320_concat_2048 cosplace 56.731
+# 320_concat_1024 cosplace 64.643
+# 320_concat_512 cosplace 66.302
+# 320_concat_256 cosplace 58.914
+# 320_concat_128 cosplace 64.925
+
+# 1280_front_2048 cosplace 33.566
+# 1280_front_1024 cosplace 25.127
+# 1280_front_512 cosplace 23.054
+# 1280_front_256 cosplace 24.301
+# 1280_front_128 cosplace 66.216
+# 640_front_2048 cosplace 33.327
+# 640_front_1024 cosplace 24.424
+# 640_front_512 cosplace 23.584
+# 640_front_256 cosplace 24.920
+# 640_front_128 cosplace 61.132
+# 320_front_2048 cosplace 33.362
+# 320_front_1024 cosplace 24.762
+# 320_front_512 cosplace 22.926
+# 320_front_256 cosplace 24.459
+# 320_front_128 cosplace 65.555
+
+# 1280_concat_2048 mmt 20.296
+# 1280_concat_1024 mmt 21.450
+# 1280_concat_512 mmt 25.500
+# 1280_concat_256 mmt 33.633
+# 1280_concat_128 mmt 71.273
+# 640_concat_2048 mmt 20.532
+# 640_concat_1024 mmt 21.534
+# 640_concat_512 mmt 25.344
+# 640_concat_256 mmt 33.377
+# 640_concat_128 mmt 71.510
+# 320_concat_2048 mmt 20.423
+# 320_concat_1024 mmt 21.427
+# 320_concat_512 mmt 25.614
+# 320_concat_256 mmt 33.387
+# 320_concat_128 mmt 71.893
+
+# 1280_front_2048 mmt 66.667
+# 1280_front_1024 mmt 63.642
+# 1280_front_512 mmt 61.563
+# 1280_front_256 mmt 81.211
+# 1280_front_128 mmt 110.627
+# 640_front_2048 mmt 66.977
+# 640_front_1024 mmt 63.841
+# 640_front_512 mmt 61.573
+# 640_front_256 mmt 82.172
+# 640_front_128 mmt 109.613
+# 320_front_2048 mmt 66.718
+# 320_front_1024 mmt 63.957
+# 320_front_512 mmt 61.467
+# 320_front_256 mmt 81.380
+# 320_front_128 mmt 111.233

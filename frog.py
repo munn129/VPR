@@ -1,22 +1,14 @@
 import numpy as np
 
-def main():
-    a = '/media/moon/T7 Shield/master_research/transvlad5_oxford_0828.npy'
-    aa = '/media/moon/T7 Shield/master_research/transvlad5_oxford_0519.npy'
+from sklearn.decomposition import PCA
 
-    # (18966, 512)
-    b = np.load(a)
-    bb = np.load(aa)
+sample_tensor = np.random.rand(1, 1024)
 
+dim = 512
 
-    cnt = 0
+pca = PCA(n_components=dim)
 
-    for i in range(b.shape[0]):
-        if sum(b[i, :]) == 0.0:
-            cnt +=1
+reduced = pca.fit_transform(sample_tensor)
 
-    print(cnt)
-
-
-if __name__ == '__main__':
-    main()
+print(sample_tensor.shape)
+print(reduced.shape)

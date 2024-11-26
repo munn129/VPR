@@ -72,6 +72,8 @@ def main2():
     args.add_argument('--save_dir', type=str, default='/media/moon/T7 Shield/multiview_results')
     args.add_argument('--batch_size', type=int, default=16)
     args.add_argument('--version', type=str, default='')
+    args.add_argument('--dim', type=int, default=512)
+    args.add_argument('--image_size', type=int, default=1280)
     
     options = args.parse_args()
 
@@ -80,17 +82,18 @@ def main2():
     dataset_name = options.dataset_name
     batch_size = options.batch_size
     VERSION = options.version
+    dim = options.dim
 
     if options.method == 'transvlad':
         # TODO
         # batch_size > 1
         batch_size = 1
     
-    loader = DataLoader(CustomDataset(Path(options.dataset_dir), 0),
+    loader = DataLoader(CustomDataset(Path(options.dataset_dir), 0, image_size=options.image_size),
                         batch_size = batch_size,
                         num_workers = 0)
     
-    extractor = TransVLAD(loader) if options.method == 'transvlad' else Extractor(method, loader)
+    extractor = TransVLAD(loader, dim=dim) if options.method == 'transvlad' else Extractor(method, loader, dim=dim)
 
     extractor.feature_extract()
 
@@ -104,5 +107,5 @@ def main2():
     np.save(save_file_dir, extractor.get_matrix())
 
 if __name__ == '__main__':
-    main()
-    # main2()
+    # main()
+    main2()

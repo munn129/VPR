@@ -48,7 +48,7 @@ class GeoLocalizationNet(nn.Module):
         )
     
     def forward(self, x):
-        x = self.backbone(x)
+        # x = self.backbone(x)
 
         # x: (1,2048,10,10)
         # print(f'after backbone: {x.shape}')

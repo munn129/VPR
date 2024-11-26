@@ -1,7 +1,7 @@
-VERSION=640f
+VERSION=horizontal
 METHODS="netvlad cosplace mixvpr gem convap transvpr"
 DATES="0519 0828"
-IMAGE=front
+IMAGE=concat
 
 for method in $METHODS
 do
@@ -12,7 +12,7 @@ do
     python feature_extract.py \
       --method $method \
       --dataset_dir /media/moon/moon_ssd/moon_ubuntu/post_oxford/$date/$IMAGE \
-      --save_dir /media/moon/T7\ Shield/ablation_study_with_image_size \
+      --save_dir /media/moon/T7\ Shield/concatenated \
       --batch_size 1 \
       --version $VERSION
   done

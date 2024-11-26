@@ -7,10 +7,15 @@ import numpy as np
 
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from sklearn.decomposition import PCA
+
+weight_prefix = '/media/moon/moon_ssd/pretrained_models'
 
 WEIGHTS = {
-    'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
-    'cosplace' : './pretrained_models/cosplace_resnet152_512.pth',
+    # 'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
+    'netvlad' : f'{weight_prefix}/netvlad/mapillary_WPCA128.pth.tar',
+    # 'cosplace' : './pretrained_models/cosplace_resnet152_512.pth',
+    'cosplace' : f'{weight_prefix}/cosplace/',
     'mixvpr' : './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt',
     'transvpr' : './pretrained_models/TransVPR_MSLS.pth'
 }
@@ -21,15 +26,19 @@ config['global_params'] = {
     'pooling' : 'netvlad',
     'resumepath' : './pretrained_models/mapillary_WPCA',
     'threads' : 0,
-    'num_pcs' : 512,
+    'num_pcs' : 128,
     'ngpu' : 1,
     'patch_sizes' : 5,
     'strides' : 1
 }
 
+def pca_decomposition(tensor):
+    pass
+
 class Extractor:
-    def __init__(self, method: str, loader: DataLoader):
-        DIM = 512
+    def __init__(self, method: str, loader: DataLoader, dim=512):
+        self.dim = dim
+        DIM = dim
 
         if not torch.cuda.is_available():
             raise Exception("CUDA must need")
@@ -53,8 +62,9 @@ class Extractor:
             sys.path.append('./cosplace')
             from cosplace.cosplace_model import cosplace_network, layers
 
-            model = cosplace_network.GeoLocalizationNet('ResNet152', 512)
-            model_state_dict = torch.load(WEIGHTS[method])
+            model = cosplace_network.GeoLocalizationNet('ResNet152', self.dim)
+
+            model_state_dict = torch.load(f'{WEIGHTS[method]}/resnet152_{self.dim}.pth')
             model.load_state_dict(model_state_dict)
 
         elif method == 'mixvpr' or method == 'gem' or method == 'convap':
@@ -88,13 +98,13 @@ class Extractor:
                 self.method = 'gem'
                 
             elif method == 'convap':
+                DIM = self.dim
                 model = VPRModel(
                     agg_arch='ConvAP',
                     agg_config={'in_channels': 2048,
-                                'out_channels': 2048})
+                                'out_channels': int(DIM/4)})
                 
                 # TODO
-                DIM = 8192
                 self.method = 'convap'
 
         elif method == 'transvpr':

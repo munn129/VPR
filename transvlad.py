@@ -21,14 +21,18 @@ sys.path.append('./transvpr')
 from transvpr.feature_extractor import Extractor_base
 from transvpr.blocks import POOL
 
+weight_prefix = '/media/moon/moon_ssd/pretrained_models/'
+
 WEIGHTS = {
     'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
-    'cosplace' : './pretrained_models/cosplace_resnet152_512.pth',
-    'mixpvr' : './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt',
+    # 'cosplace' : './pretrained_models/cosplace_resnet152_512.pth',
+    'cosplace' : f'{weight_prefix}cosplace/resnet152_256.pth',
+    'mixvpr' : './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt',
+    # 'mixvpr' : f'{weight_prefix}mixvpr/resnet50_MixVPR_128_channels(64)_rows(2).ckpt',
     'tranvpr' : './pretrained_models/TransVPR_MSLS.pth'
 }
 
-DIM = 512
+# DIM = 512
 
 config = configparser.ConfigParser()
 config['global_params'] = {
@@ -42,7 +46,9 @@ config['global_params'] = {
 }
 
 class TransVLAD:
-    def __init__(self, loader: DataLoader):
+    def __init__(self, loader: DataLoader, dim=512):
+
+        DIM = dim
 
         if not torch.cuda.is_available():
             raise Exception('CUDA must need')
@@ -93,7 +99,22 @@ class TransVLAD:
                 'is_mix' : True
             })
         
-        mixvpr_state_dict = torch.load(WEIGHTS['mixpvr'])
+        # resnet50_MixVPR_128_channels(64)_rows(2).ckpt
+        # mixvpr_model = VPRModel(backbone_arch='resnet50',
+        #     layers_to_crop=[4],
+        #     agg_arch='MixVPR',
+        #     agg_config={
+        #         'in_channels' : 1024,
+        #         'in_h' : 20,
+        #         'in_w' : 20,
+        #         'out_channels' : 64,
+        #         'mix_depth' : 4,
+        #         'mlp_ratio': 1,
+        #         'out_rows' : 2, # the output dim will be (out_rows * out_channels)
+        #         'is_mix' : True
+        #     })
+        
+        mixvpr_state_dict = torch.load(WEIGHTS['mixvpr'])
         mixvpr_model.load_state_dict(mixvpr_state_dict)
 
         mixvpr_model = mixvpr_model.to(self.device)
@@ -101,8 +122,11 @@ class TransVLAD:
         self.mixvpr_model = mixvpr_model
 
         # cosplace
-        cos_model = cosplace_network.GeoLocalizationNet('ResNet152', 512)
-        cos_model_state_dict = torch.load(WEIGHTS['cosplace'])
+        # cos_model = cosplace_network.GeoLocalizationNet('ResNet152', 512)
+        # cos_model = cosplace_network.GeoLocalizationNet('ResNet152', 2048)
+        cos_model = cosplace_network.GeoLocalizationNet('ResNet152', dim)
+        # cos_model_state_dict = torch.load(WEIGHTS['cosplace'])
+        cos_model_state_dict = torch.load(f'{weight_prefix}cosplace/resnet152_{dim}.pth')
         cos_model.load_state_dict(cos_model_state_dict)
         cos_model = cos_model.to(self.device)
         cos_model.eval()
@@ -440,6 +464,31 @@ class TransVLAD:
         torch.cuda.empty_cache()
 
         return des.detach().cpu().numpy()
+    
+    def something9(self, image_tensor):
+        
+        with torch.no_grad():
+            mixed_tensor = self.mixvpr_model(image_tensor.to(self.device))
+            # 1, 1024, 400
+
+            mixed_tensor = mixed_tensor.view(1,1024,20,20)
+
+            TH = int(mixed_tensor.shape[2]/2)
+
+            top_left = mixed_tensor[:,:,:TH,:TH].view(1, 512, 2, TH, TH).sum(dim=2)
+            top_right = mixed_tensor[:,:,:TH, TH:].view(1, 512, 2, TH, TH).sum(dim=2)
+            bottom_left = mixed_tensor[:,:,TH:, :TH].view(1, 512, 2, TH, TH).sum(dim=2)
+            bottom_right = mixed_tensor[:,:,TH:,TH:].view(1, 512, 2, TH, TH).sum(dim=2)
+            # 1, 1024, 10, 10 -> 1, 512, 10, 10
+
+            combined_mix = torch.cat([top_left, top_right, bottom_left, bottom_right], dim=1)
+            # 1, 2048, 10, 10
+
+            des = self.cos_model(combined_mix.to(self.device))
+
+        torch.cuda.empty_cache()
+
+        return des.detach().cpu().numpy()
 
 
     def feature_extract(self):
@@ -452,7 +501,7 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something8(image_tensor)
+            self.matrix[indices_np, :] = self.something9(image_tensor)
 
 
     def get_matrix(self):
@@ -470,7 +519,7 @@ def main():
 
     for image_tensor, id in tqdm(loader):
 
-        extractor.something8(image_tensor)
+        extractor.something9(image_tensor)
 
 if __name__ == '__main__':
     main()

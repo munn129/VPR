@@ -63,7 +63,7 @@ class MixVPR(nn.Module):
         x = x.flatten(2)
 
         # x: (1,1024,400)
-        x = self.mix(x)
+        # x = self.mix(x)
         # x: (1,1024,400)
 
         if self.is_mix:
