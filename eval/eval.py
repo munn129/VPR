@@ -176,7 +176,7 @@ def main():
     version = options.version
 
     result_dir = Path(f'/home/moon/Documents/VPR/eval/{DIR}')
-    save_dir = f'/home/moon/Documents/VPR/eval/{DIR}'
+    save_dir = f'/home/moon/Documents/VPR/eval/{DIR}_analysis'
 
     result_files = sorted(list(result_dir.glob(f'*{version}_result.txt')))
 
@@ -200,13 +200,15 @@ def main2():
     args.add_argument('--method', type=str, default='transvlad',
                       help='VPR method name, e.g., netvlad, cosplace, mixpvr, gem, convap, transvpr')
     args.add_argument('--version', type=str, default='1')
+    args.add_argument('--matching_dir', type=str, default='')
+    args.add_argument('--save_dir', type=str, default='')
 
     options = args.parse_args()
 
     method = options.method + options.version
 
-    result_dir = f'/home/moon/Documents/VPR/eval/dim_ex/{method}_result.txt'
-    save_dir = '/home/moon/Documents/VPR/eval/dim_ex'
+    result_dir = f'/home/moon/Documents/VPR/eval/concatenated_result/{method}_result.txt'
+    save_dir = '/home/moon/Documents/VPR/eval/concatenated'
 
     index_gps = GPS(index_gps_dir)
     query_gps = GPS(query_gps_dir)

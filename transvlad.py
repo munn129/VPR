@@ -466,6 +466,7 @@ class TransVLAD:
         return des.detach().cpu().numpy()
     
     def something9(self, image_tensor):
+        # cross concatenation
         
         with torch.no_grad():
             mixed_tensor = self.mixvpr_model(image_tensor.to(self.device))
@@ -489,6 +490,60 @@ class TransVLAD:
         torch.cuda.empty_cache()
 
         return des.detach().cpu().numpy()
+    
+    def something10(self, image_tensor):
+        # horizontal concatenation
+        # 66
+
+        with torch.no_grad():
+            mixed_tensor = self.mixvpr_model(image_tensor.to(self.device))
+            # 1, 1024, 400
+
+            mixed_tensor = mixed_tensor.view(1,1024,20,20)
+
+            TH = int(mixed_tensor.shape[2]/4)
+
+            far_left = mixed_tensor[:,:,:TH,:].view(1, 512, 2, TH, TH * 4).sum(dim=2)
+            middle_left = mixed_tensor[:,:,TH:TH*2,:].view(1, 512, 2, TH, TH * 4).sum(dim=2)
+            middle_right = mixed_tensor[:,:,TH*2:TH*3,:].view(1, 512, 2, TH, TH * 4).sum(dim=2)
+            far_right = mixed_tensor[:,:,TH*3:TH*4,:].view(1, 512, 2, TH, TH * 4).sum(dim=2)
+            # 1, 1024, 10, 10 -> 1, 512, 10, 10
+
+            combined_mix = torch.cat([far_left, middle_left, middle_right, far_right], dim=1)
+            # 1, 2048, 10, 10
+
+            des = self.cos_model(combined_mix.to(self.device))
+
+        torch.cuda.empty_cache()
+
+        return des.detach().cpu().numpy()
+    
+    def something11(self, image_tensor):
+        # vertical concatenation
+        # 
+
+        with torch.no_grad():
+            mixed_tensor = self.mixvpr_model(image_tensor.to(self.device))
+            # 1, 1024, 400
+
+            mixed_tensor = mixed_tensor.view(1,1024,20,20)
+
+            TH = int(mixed_tensor.shape[2]/4)
+
+            far_left = mixed_tensor[:,:,:,:TH].view(1, 512, 2, TH * 4, TH).sum(dim=2)
+            middle_left = mixed_tensor[:,:,:,TH:TH*2].view(1, 512, 2, TH * 4, TH).sum(dim=2)
+            middle_right = mixed_tensor[:,:,:,TH*2:TH*3].view(1, 512, 2, TH * 4, TH).sum(dim=2)
+            far_right = mixed_tensor[:,:,:,TH*3:TH*4].view(1, 512, 2, TH * 4, TH).sum(dim=2)
+            # 1, 1024, 10, 10 -> 1, 512, 10, 10
+
+            combined_mix = torch.cat([far_left, middle_left, middle_right, far_right], dim=1)
+            # 1, 2048, 10, 10
+
+            des = self.cos_model(combined_mix.to(self.device))
+
+        torch.cuda.empty_cache()
+
+        return des.detach().cpu().numpy()
 
 
     def feature_extract(self):
@@ -501,7 +556,7 @@ class TransVLAD:
             # self.z_normalized_mask = np.ones((400,1))
             # self.local_vlad(image_tensor)
 
-            self.matrix[indices_np, :] = self.something9(image_tensor)
+            self.matrix[indices_np, :] = self.something11(image_tensor)
 
 
     def get_matrix(self):
@@ -519,7 +574,7 @@ def main():
 
     for image_tensor, id in tqdm(loader):
 
-        extractor.something9(image_tensor)
+        extractor.something11(image_tensor)
 
 if __name__ == '__main__':
     main()

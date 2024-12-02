@@ -29,20 +29,21 @@ class CustomDataset(Dataset):
 
     def __getitem__(self, index):
         img_path = self.image_path_list[index]
-        # img = Image.open(img_path).convert('RGB')
-        img = self.resizer(Image.open(img_path).convert('RGB'))
+        img = Image.open(img_path).convert('RGB')
+        # img = self.resizer(Image.open(img_path).convert('RGB'))
 
-        # th = int(img.size[0]/2)
-        # f = img.crop((0,0,th,th))
-        # r = img.crop((th,0,th * 2,th))
-        # l = img.crop((0, th, th, th * 2))
-        # b = img.crop((th, th, th * 2, th * 2))
+        th = int(img.size[0]/2)
+        f = img.crop((0,0,th,th))
+        r = img.crop((th,0,th * 2,th))
+        l = img.crop((0, th, th, th * 2))
+        b = img.crop((th, th, th * 2, th * 2))
 
-        # img = Image.new("RGB", (th * 4, th))
-        # img.paste(f, (0,0))
-        # img.paste(r, (th, 0))
-        # img.paste(l, (th * 2, 0))
-        # img.paste(b, (th * 3, 0))
+        # horizontal
+        img = Image.new("RGB", (th * 4, th))
+        img.paste(f, (0,0))
+        img.paste(r, (th,0))
+        img.paste(l, (th * 2,0))
+        img.paste(b, (th * 3,0))
 
         '''
         image: Tensor

@@ -5,7 +5,7 @@ from tqdm import tqdm
 import os
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-analysis_save_prefix = './dim_ex_analysis'
+analysis_save_prefix = './concatenated_analysis'
 
 # multiview sync data only front result
 front_convap = './multiview_error/convap1.txt'
@@ -116,6 +116,7 @@ def main2():
     t_err_check_list = [1, 2.5, 5, 7.5, 10]
     r_err_check_list = [1, 2.5, 5, 7.5, 10]
 
+    analysis_save_prefix = './dim_ex_analysis'
     result_dir = './dim_ex'
     result_files = sorted(list(Path(result_dir).glob('*.txt')))
 

@@ -12,8 +12,8 @@ from sklearn.decomposition import PCA
 weight_prefix = '/media/moon/moon_ssd/pretrained_models'
 
 WEIGHTS = {
-    # 'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
-    'netvlad' : f'{weight_prefix}/netvlad/mapillary_WPCA128.pth.tar',
+    'netvlad' : './pretrained_models/mapillary_WPCA512.pth.tar',
+    # 'netvlad' : f'{weight_prefix}/netvlad/mapillary_WPCA128.pth.tar',
     # 'cosplace' : './pretrained_models/cosplace_resnet152_512.pth',
     'cosplace' : f'{weight_prefix}/cosplace/',
     'mixvpr' : './pretrained_models/resnet50_MixVPR_512_channels(256)_rows(2).ckpt',
@@ -26,7 +26,7 @@ config['global_params'] = {
     'pooling' : 'netvlad',
     'resumepath' : './pretrained_models/mapillary_WPCA',
     'threads' : 0,
-    'num_pcs' : 128,
+    'num_pcs' : 512,
     'ngpu' : 1,
     'patch_sizes' : 5,
     'strides' : 1

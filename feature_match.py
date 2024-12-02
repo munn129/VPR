@@ -5,7 +5,7 @@ import faiss
 from pathlib import Path
 from tqdm import tqdm
 
-DIR = 'dim_ex'
+DIR = 'concatenated'
 feature_dir_prefix = f'/media/moon/T7 Shield/{DIR}'
 image_dir_prefix = '/media/moon/moon_ssd/moon_ubuntu/post_oxford/'
 method_list = ['convap', 'cosplace', 'gem', 'mixvpr', 'netvlad', 'transvpr']

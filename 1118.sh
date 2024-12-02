@@ -16,14 +16,16 @@ do
       --batch_size 1 \
       --version $VERSION
   done
+  echo "$VERSION feature matching start"
+  echo "date now : $(date +%Y)-$(date +%m)-$(date +%d) $(date +%H):$(date +%M):$(date +%S)"
+  python feature_match.py \
+    --version $VERSION \
+    --method $method \
+    --save_dir concatenated_result
+
+  echo "$VERSION eval start"
+  echo "date now : $(date +%Y)-$(date +%m)-$(date +%d) $(date +%H):$(date +%M):$(date +%S)"
+  python eval/eval.py \
+    --version $VERSION \
+    --method $method 
 done
-
-echo "$VERSION feature matching start"
-echo "date now : $(date +%Y)-$(date +%m)-$(date +%d) $(date +%H):$(date +%M):$(date +%S)"
-python feature_match.py \
---version $VERSION
-
-echo "$VERSION eval start"
-echo "date now : $(date +%Y)-$(date +%m)-$(date +%d) $(date +%H):$(date +%M):$(date +%S)"
-python eval/eval.py \
---version $VERSION
