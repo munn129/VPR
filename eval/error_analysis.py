@@ -116,8 +116,8 @@ def main2():
     t_err_check_list = [1, 2.5, 5, 7.5, 10]
     r_err_check_list = [1, 2.5, 5, 7.5, 10]
 
-    analysis_save_prefix = './dim_ex_analysis'
-    result_dir = './dim_ex'
+    analysis_save_prefix = './late'
+    result_dir = './late'
     result_files = sorted(list(Path(result_dir).glob('*.txt')))
 
     for result in tqdm(result_files):
